@@ -20,7 +20,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-; .text
+section .text ;section .text in an include file did not throw an error
 
 ; rcx contains value(string) to print
 print_rcx:
@@ -69,3 +69,9 @@ QUIT:
    mov rax, 60
    syscall
    ret
+
+section .data ;section .data in an include file did not throw an error
+   msg2 db "hello mars!", 0Ah, 0h
+
+; section .bss ;section .bss in an include file did throw an error
+; functionVariable: RESB 1 ; reserve 1 byte for the variable functionVariable
