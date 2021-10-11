@@ -21,7 +21,9 @@
 ; SOFTWARE.
 
 
-; nasm -felf64 main.asm && ld main.o -o main
+; nasm -felf64 main.asm -l main.lst && ld main.o -o main
+; -l main.lst option generates a macinecode output of the code
+
 ; clean
 ; rm *.txt && rm init_0
 ~                              
