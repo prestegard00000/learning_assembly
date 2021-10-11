@@ -1,0 +1,14 @@
+#object files
+*.o
+
+#executable
+main
+
+#.lst files
+*.lst
+
+#.txt files
+*.txt
+
+#.swp files
+*.swp
