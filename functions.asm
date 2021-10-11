@@ -20,28 +20,52 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-section .text
-; other library.asm files can be included using %include 'fileName.asm'
-; not sure if %include is required to be in the .text section
-; code goes in the .text section
-%include 'functions.asm'
+; .text
 
-global _start ; _start must be declared as a global for the linker
+; rcx contains value(string) to print
+print_rcx:
+   push rdx
+   push rcx
+   push rbx
+   push rax
+   call slen
 
-;start the actual program
-_start:
-; run some code here
-    mov  rcx, msg1
-    call print_rcx
-    call QUIT
+   mov  rdx, rax
+   mov  rbx, 1
+   mov  rax, 4
+   int  80h
+   syscall
+   pop  rax
+   pop  rbx
+   pop  rcx
+   pop  rdx
 
-; .data contains constant variables ?
-section .data
-    msg1  db "Hello world!", 0Ah, 0h
-    LF    db 0AH   ; 'line feed'
-    zero  db 30H   ; '0'
-    one   db 31H   ; '1'
+   ret
 
-; .bss contains variable variables ?
-section .bss
-variable: RESB 1 ; reserve 1 byte for the variable variable
+
+; get string length of string in rcx
+; return in rax
+slen:
+   push rcx
+   push rbx
+   mov  rbx, rcx
+   mov  rax, rcx
+
+.nextchar:
+   cmp  byte [rax], 0
+   jz   .finished
+   inc  rax
+   jmp  .nextchar
+
+.finished:
+   sub  rax, rbx
+   pop  rbx
+   pop  rcx
+
+   ret
+
+; quit program
+QUIT:
+   mov rax, 60
+   syscall
+   ret
