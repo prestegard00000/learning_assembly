@@ -31,12 +31,51 @@ global _start ; _start must be declared as a global for the linker
 ;start the actual program
 _start:
 ; run some code here
-    mov  rcx, msg1
-    call print_rcx
-    call QUIT
+; test print function
+	mov	rcx,	msg1
+	call	print_rcx
+
+; test file function
+	mov	rcx,	filename_test
+	call	print_rcx
+
+; create file
+	mov	rdi,	filename_test
+	mov	rbx,	fd_test
+	call	fileCreate
+
+; test file function
+	mov	rcx,	filename_test
+	call	print_rcx
+
+; print message to file
+	mov	rcx, msg1
+	call	fileWrite
+
+; close file
+	mov	rbx,	fd_test
+	call	fileClose
+
+; test file function
+	mov	rcx,	filename_test
+	call	print_rcx
+
+
+
+
+	call	QUIT
+
+
+;---------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------
+
 
 ; .data contains constant variables ?
 section .data
+    filename_test db "test.txt", 0
+    fd_test dq 0
+
     msg1  db "Hello world!", 0Ah, 0h
     LF    db 0AH   ; 'line feed'
     zero  db 30H   ; '0'
