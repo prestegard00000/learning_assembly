@@ -72,6 +72,35 @@ get_indexValue:
     ; place index value in register
     ret
 
+compute_indexSize:
+	; return four bits depending on value in rdx
+	push	rcx
+	mov	rcx,	rdx
+	shl	rcx,	2
+	cmp	rcx,	0
+	jmp	.indexSize2
+	shl	rcx,	4
+	cmp	rcx,	0
+	jmp	.indexSize6
+	call	getSysMaxBits
+	shl	rbx,	1
+	shl	rcx,	rbx
+	cmp	rcx,	0
+	jmp	.indexSizeHalfMax
+	; otherwise indexSize is max
+	mov	rax,	11b
+	jmp	.indexFoundSize
+.indexSize2:
+	mov	rax,	00b
+	jmp	.indexFoundSize
+.indexSize4:
+	mov	rax,	01b
+	jmp	.indexFoundSize
+.indexSizeHalfMax:
+	mov	rax,	10b
+.indexFoundSize:
+	pop	rcx
+	ret
 ; compare two indices
 ; Greater Than
 cmp_indices:
