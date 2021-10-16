@@ -112,6 +112,12 @@ slen:
    ret
 
 ;---------------------------------------------------------------------------------
+; returns the number of bits in the rax register
+getSysMaxBits:
+	mov	rax, 64
+	ret
+
+;---------------------------------------------------------------------------------
 ; quit program
 QUIT:
    mov rax, 60

@@ -26,6 +26,8 @@ section .text
 ; code goes in the .text section
 %include 'functions.asm'
 
+%include 'index.asm'		; how to handel index data types
+
 global _start ; _start must be declared as a global for the linker
 
 ;start the actual program
