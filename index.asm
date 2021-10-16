@@ -62,15 +62,33 @@ get_indexSize:
 	ret
 
 set_indexSize:
-    ; compute the number of bits needed to store the index
-    ; convert the index to a sized index
-    ret
+	; compute the number of bits needed to store the index
+	; convert the index to a sized index
+	; value in rdx return value and index size in rbx
+	call compute_indexSize
+	mov	rbx,	rdx
+	and	rbx,	rax
+	ret
+	
 
 get_indexValue:
-    ; get the indexSize
-    ; set register to zero
-    ; place index value in register
-    ret
+	; encoded index in rdx
+	; get the indexSize
+	; set register to zero
+	; place index value in register rbx
+	call get_indexSize
+	; currently using 64 bit register, assuming in the future the register will be sized
+	mov	rax,	64
+	sub	rax,	rbx
+	mov	rbx,	rdx
+	mov	rcx,	0
+.shiftRightLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
+	shr	rbx,	1
+	inc	rcx
+	cmp	rax,	rcx
+	jmp	.shiftRightLoop01
+
+	ret
 
 compute_indexSize:
 	; return four bits depending on value in rdx
@@ -81,10 +99,16 @@ compute_indexSize:
 	jmp	.indexSize2
 	shl	rcx,	4
 	cmp	rcx,	0
-	jmp	.indexSize6
+	jmp	.indexSize4
 	call	getSysMaxBits
 	shl	rbx,	1
-	shl	rcx,	rbx
+	mov	rax,	0
+.shiftLeftLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
+	shl	rcx,	1
+	inc	rax
+	cmp	rax,	rbx
+	jmp	.shiftLeftLoop01
+
 	cmp	rcx,	0
 	jmp	.indexSizeHalfMax
 	; otherwise indexSize is max
@@ -97,7 +121,7 @@ compute_indexSize:
 	mov	rax,	01b
 	jmp	.indexFoundSize
 .indexSizeHalfMax:
-	mov	rax,	10b
+	mov	rax,	10b	; needs to check to see if the value is greater than (SysMaxBits - 2)
 .indexFoundSize:
 	pop	rcx
 	ret
