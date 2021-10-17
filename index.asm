@@ -90,6 +90,25 @@ get_indexValue:
 
 	ret
 
+set_indexValue:
+	; encoded index in rdx
+	; get the indexSize
+	; set register to zero
+	; place index value in register rbx
+	call get_indexSize
+	; currently using 64 bit register, assuming in the future the register will be sized
+	mov	rax,	64
+	sub	rax,	rbx
+	mov	rbx,	rdx
+	mov	rcx,	0
+.shiftRightLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
+	shr	rbx,	1
+	inc	rcx
+	cmp	rax,	rcx
+	jmp	.shiftRightLoop01
+
+	ret
+
 compute_indexSize:
 	; return four bits depending on value in rdx
 	push	rcx
