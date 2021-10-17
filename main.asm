@@ -28,12 +28,15 @@ section .text
 
 %include 'index.asm'		; how to handel index data types
 
+%include 'tests/unit_tests.asm'	; **!** needs a mechanism to exclude tests
+
 global _start ; _start must be declared as a global for the linker
 
 ;start the actual program
 _start:
 ; run some code here
 ; test print function
+; **!** need to move these tests to the testing framework
 	mov	rcx,	msg1
 	call	print_rcx
 
@@ -63,6 +66,15 @@ _start:
 	call	print_rcx
 
 
+; testing framework for index.asm
+	mov	rcx,	LF
+	call	print_rcx
+	mov	rcx,	msg_testBegin
+	call	print_rcx
+	mov	rcx,	LF
+	call	print_rcx
+	call	index__set_get_test1
+
 
 
 	call	QUIT
@@ -78,6 +90,9 @@ section .data
     filename_test db "test.txt", 0
     fd_test dq 0
 
+	msg_testBegin	db	"tests begin: ",	0Ah,	0h
+	msg_passed	db	".",	0Ah,	0h
+	msg_failed	db	"x",	0Ah,	0h
     msg1  db "Hello world!", 0Ah, 0h
     LF    db 0AH   ; 'line feed'
     zero  db 30H   ; '0'
