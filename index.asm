@@ -29,36 +29,34 @@
 ; 10 - half of the system max bits, two for the size, ((system max)/2 -2) for the index
 ; 11 - full system max bits, two for the size, ((system max)-2) for the index
 
-; for index in rdx
-; move to rbx
-; left shift twice
-; right shift twice
-; take the difference
-; return lookup table value
+; for sized index in rdx
+; put 11 in the 2  most signigicant bits for system max 
+; and with rdx
+; shift right system max - 2
+; return rax ints from size lookup table
 get_indexSize:
 	push	rbx
 	push	rcx
-	mov	rcx,	1100000000000000000000000000000000000000000000000000000000000b	; apparently nasm doesn't like using 64 binary immediate with "and"
-	mov	rbx,	rdx	; copy rdx into rbx
-	and	rbx,	rcx	; bit mask the top two
-	mov	rax,	4
-	cmp	rbx,	0
-	jmp	.indexFoundSize
-	shl	rbx,	2
-	mov	rcx,	0100000000000000000000000000000000000000000000000000000000000b 	; apparently nasm doesn't like using 64 binary immediate with "cmp"
-	cmp	rbx,	rcx
-	jmp	.indexFoundSize
-	call	getSysMaxBits
-	mov	rcx,	1100000000000000000000000000000000000000000000000000000000000b	; apparently nasm doesn't like using 64 binary immediate with "cmp"
-	cmp	rbx,	rcx
-	jmp	.indexFoundSize
-	shr	rax,	1
-	;cmp	rbx,	1100000 00000000 00000000 00000000 00000000 00000000 00000000 00000000b
+	push	rdx
+	call	getSysMaxBits	; into rbx
+				; assume that all the registers are SysMaxBits
+	sub	rbx,	2	; get the number of bits to shift
+	shr	rcx,	rbx	; shift right to remove the value and leave the size encoding
+	mov	rax,	4	; 4 bits is the minimum size an index can have
+	cmp	rcx,	00b	; is it the first size encoding
+	je	.indexFoundSize	; if the two are equal, then jump ahead
+	add	rax,	4	; 8 bits is the next size up
+	cmp	rcx,	01b	; next size encoding
+	je	.indexFoundSize	;
+	add	rbx,	2	; get back to the SysMaxBits
+	mov	rax,	rbx	; 
+	cmp	rcx,	11b
+	je	.indexFoundSize
+	shr	rax,	1	; divide by two
 .indexFoundSize:
+	pop	rdx
 	pop	rcx
 	pop	rbx
-	;*!* should the registers be zero'd out?
-
 	ret
 
 set_indexSize:
@@ -67,7 +65,7 @@ set_indexSize:
 	; value in rdx return value and index size in rbx
 	call compute_indexSize
 	mov	rbx,	rdx
-	and	rbx,	rax
+	; and	rbx,	rax
 	ret
 	
 
@@ -91,18 +89,24 @@ get_indexValue:
 	ret
 
 set_indexValue:
-	; encoded index in rdx
+	; index value in rdx
 	; get the indexSize
 	; set register to zero
 	; place index value in register rbx
-	call get_indexSize
+	call compute_indexSize	; set_indexSize
 	; currently using 64 bit register, assuming in the future the register will be sized
 	mov	rax,	64
 	sub	rax,	rbx
 	mov	rbx,	rdx
+	mov	rcx,	msg_failed
+	call	print_rcx
 	mov	rcx,	0
 .shiftRightLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
 	shr	rbx,	1
+	push	rcx
+	mov	rcx,	msg_failed
+	call	print_rcx
+	pop	rcx
 	inc	rcx
 	cmp	rax,	rcx
 	jmp	.shiftRightLoop01
