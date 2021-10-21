@@ -29,111 +29,151 @@
 ; 10 - half of the system max bits, two for the size, ((system max)/2 -2) for the index
 ; 11 - full system max bits, two for the size, ((system max)-2) for the index
 
+
+; decode the encoded index size in rdx 4 bits
+; return int amount in rbx
+decode_indexSize:
+	mov	rbx,	4
+	cmp	rdx,	00b
+	je	.indexSizeDecoded
+	mov	rbx,	8
+	cmp	rdx,	01b
+	je	.indexSizeDecoded
+
+	call	getSysMaxBits	; (const) into rbx
+
+	cmp	rdx,	11b
+	je	.indexSizeDecoded
+	shr	rbx,	1
+
+.indexSizeDecoded:
+	
+	ret
+	
+
 ; for sized index in rdx
 ; put 11 in the 2  most signigicant bits for system max 
 ; and with rdx
 ; shift right system max - 2
 ; return rax ints from size lookup table
-get_indexSize:
+get_indexSize_encoded:
 	push	rbx
 	push	rcx
 	push	rdx
 	call	getSysMaxBits	; into rbx
 				; assume that all the registers are SysMaxBits
 	sub	rbx,	2	; get the number of bits to shift
-	shr	rcx,	rbx	; shift right to remove the value and leave the size encoding
-	mov	rax,	4	; 4 bits is the minimum size an index can have
-	cmp	rcx,	00b	; is it the first size encoding
-	je	.indexFoundSize	; if the two are equal, then jump ahead
-	add	rax,	4	; 8 bits is the next size up
-	cmp	rcx,	01b	; next size encoding
-	je	.indexFoundSize	;
-	add	rbx,	2	; get back to the SysMaxBits
-	mov	rax,	rbx	; 
-	cmp	rcx,	11b
-	je	.indexFoundSize
-	shr	rax,	1	; divide by two
-.indexFoundSize:
+	push	rdx
+	shr	rdx,	62	; **!** This value shouldn't be hard coded and needs a counted loop to fix it
+
 	pop	rdx
 	pop	rcx
 	pop	rbx
 	ret
 
-set_indexSize:
-	; compute the number of bits needed to store the index
-	; convert the index to a sized index
-	; value in rdx return value and index size in rbx
-	call compute_indexSize
-	mov	rbx,	rdx
-	; and	rbx,	rax
-	ret
-	
-
-get_indexValue:
-	; encoded index in rdx
-	; get the indexSize
-	; set register to zero
-	; place index value in register rbx
-	call get_indexSize
-	; currently using 64 bit register, assuming in the future the register will be sized
-	mov	rax,	64
-	sub	rax,	rbx
-	mov	rbx,	rdx
-	mov	rcx,	0
-.shiftRightLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
-	shr	rbx,	1
-	inc	rcx
-	cmp	rax,	rcx
-	jmp	.shiftRightLoop01
-
+; encoded indexValue in rdx
+; return
+; rax encoded indexSize
+; rbx decoded indexSize
+get_indexSize_decoded:
+	push	rdx
+	call	get_indexSize_encoded
+	mov	rdx,	rbx
+	mov	rax,	rbx	; put rbx into rax so the function doesn't have to be called again
+	call	decode_indexSize
+	pop	rdx
 	ret
 
-set_indexValue:
+; encoded indexValue in rdx
+; return decoded indexValue in rbx
+decode_indexValue:
+	push rdx
+	call get_indexSize_decoded	; into rbx
+	sub	rbx,	2	; remove encoded size, size
+
+	shl	rdx,	2	; cut off index encoding
+	shr	rdx,	2
+.shiftRightLoop:
+	shr	rdx,	1	; 
+	dec	rbx
+	cmp	rbx,	0	; may need to add a single shift before the loop
+	jmp	.shiftRightLoop
+	mov	rbx,	rdx
+	pop	rdx	
+
+	ret
+
+; encoded indexSize in rax
+; decoded indexSize in rbx   These two could exist in the same register
+; unencoded indexValue in rdx
+; returns encoded indexValue in rbx
+encode_indexValue:
+	sub	rbx,	2	; remove encoded size, size
+.shiftLeftloop:
+	push	rdx
+	shl	rdx,	1
+	dec	rbx
+	cmp	rbx,	0
+	jmp	.shiftLeftloop
+	shl	rax,	62
+	or	rbx,	rax
+	pop	rdx
+	ret
+
+
+; encoded indexValue in rdx
+; return
+; decoded indexValue in rbx
+get_indexValue_decoded:
+	push	rdx
+	call	get_indexSize_decoded
+	call	decode_indexValue
+	pop	rdx
+
+	ret
+
+set_indexValue_encoded:
 	; index value in rdx
 	; get the indexSize
 	; set register to zero
 	; place index value in register rbx
-	call compute_indexSize	; set_indexSize
-	; currently using 64 bit register, assuming in the future the register will be sized
-	mov	rax,	64
-	sub	rax,	rbx
-	mov	rbx,	rdx
-	mov	rcx,	msg_failed
-	call	print_rcx
-	mov	rcx,	0
-.shiftRightLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
-	shr	rbx,	1
-	push	rcx
-	mov	rcx,	msg_failed
-	call	print_rcx
-	pop	rcx
-	inc	rcx
-	cmp	rax,	rcx
-	jmp	.shiftRightLoop01
+	push	rdx
+	call compute_indexSize_encoded	; set_indexSize
+	push	rax
+	call	decode_indexSize
+	call	encode_indexValue
+	pop	rax
+	pop	rdx
+
 
 	ret
 
-compute_indexSize:
+compute_indexSize_encoded:
 	; return four bits depending on value in rdx
+	; rdx does not have a size encoding on it and must be less than maxSysBits - 2 bits
+	; return
+	; rax
 	push	rcx
-	mov	rcx,	rdx
-	shl	rcx,	2
-	cmp	rcx,	0
-	jmp	.indexSize2
-	shl	rcx,	4
-	cmp	rcx,	0
-	jmp	.indexSize4
+	push	rdx
+	shr	rdx,	2
+	cmp	rdx,	0
+	je	.indexSize2
+	shr	rdx,	4
+	cmp	rdx,	0
+	je	.indexSize4
 	call	getSysMaxBits
-	shl	rbx,	1
-	mov	rax,	0
-.shiftLeftLoop01:		;utilizing a loop as shiftleft won't take a register for the number of bits to shift
-	shl	rcx,	1
-	inc	rax
-	cmp	rax,	rbx
-	jmp	.shiftLeftLoop01
+	mov	rax,	rbx
+	shr	rax,	1	; divide the SysMaxBits in half
+	sub	rax,	2	; take off two for the size encoding
+	mov	rcx,	0	; counter (should I use rdi instead?)
+.shiftLoop01:		;utilizing a loop as shift ops won't take a register for the number of bits to shift
+	shr	rdx,	1
+	inc	rcx
+	cmp	rcx,	rax
+	je	.shiftLoop01
 
-	cmp	rcx,	0
-	jmp	.indexSizeHalfMax
+	cmp	rdx,	0
+	je	.indexSizeHalfMax
 	; otherwise indexSize is max
 	mov	rax,	11b
 	jmp	.indexFoundSize
@@ -146,8 +186,11 @@ compute_indexSize:
 .indexSizeHalfMax:
 	mov	rax,	10b	; needs to check to see if the value is greater than (SysMaxBits - 2)
 .indexFoundSize:
+	pop	rdx
 	pop	rcx
 	ret
+
+
 ; compare two indices
 ; Greater Than
 cmp_indices:
