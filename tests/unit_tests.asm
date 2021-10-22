@@ -50,10 +50,10 @@ index__set_get_test1:
 	mov	rdx,	0
 	mov	rcx,	msg1
 	call	print_rcx
-	call	set_indexValue
+	call	set_indexValue_encoded
 	mov	rcx,	msg1
 	call	print_rcx
-	call	get_indexValue
+	call	get_indexValue_decoded
 	mov	rcx,	msg1
 	call	print_rcx
 	cmp	rbx,	0
