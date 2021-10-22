@@ -30,7 +30,8 @@
 ; 11 - full system max bits, two for the size, ((system max)-2) for the index
 
 
-; decode the encoded index size in rdx 4 bits
+; decode the encoded index size in rdx 2 bits
+; remove 2 bits for index size
 ; return int amount in rbx
 decode_indexSize:
 	mov	rbx,	4
@@ -47,27 +48,25 @@ decode_indexSize:
 	shr	rbx,	1
 
 .indexSizeDecoded:
-	
+	sub	rbx,	2
+
 	ret
 	
 
-; for sized index in rdx
+; for sized encoded index value in rdx
 ; put 11 in the 2  most signigicant bits for system max 
 ; and with rdx
 ; shift right system max - 2
 ; return rax ints from size lookup table
 get_indexSize_encoded:
 	push	rbx
-	push	rcx
-	push	rdx
 	call	getSysMaxBits	; into rbx
 				; assume that all the registers are SysMaxBits
 	sub	rbx,	2	; get the number of bits to shift
-	push	rdx
-	shr	rdx,	62	; **!** This value shouldn't be hard coded and needs a counted loop to fix it
+	mov	rax,	rdx
+	shr	rax,	62	; **!** This value shouldn't be hard coded and needs a counted loop to fix it
+				; **!** however, nasm doesn't let rbx be the second value
 
-	pop	rdx
-	pop	rcx
 	pop	rbx
 	ret
 
@@ -77,9 +76,9 @@ get_indexSize_encoded:
 ; rbx decoded indexSize
 get_indexSize_decoded:
 	push	rdx
-	call	get_indexSize_encoded
-	mov	rdx,	rbx
-	mov	rax,	rbx	; put rbx into rax so the function doesn't have to be called again
+	call	get_indexSize_encoded	; returns endcoded size in rax
+
+	mov	rdx,	rax
 	call	decode_indexSize
 	pop	rdx
 	ret
@@ -88,17 +87,19 @@ get_indexSize_decoded:
 ; return decoded indexValue in rbx
 decode_indexValue:
 	push rdx
+	push rax
 	call get_indexSize_decoded	; into rbx
-	sub	rbx,	2	; remove encoded size, size
 
-	shl	rdx,	2	; cut off index encoding
+	shl	rdx,	2	; cut off index encoding **!** this likely doesn't work
 	shr	rdx,	2
 .shiftRightLoop:
 	shr	rdx,	1	; 
 	dec	rbx
-	cmp	rbx,	0	; may need to add a single shift before the loop
-	jmp	.shiftRightLoop
+	;cmp	rbx,	0	; may need to add a single shift before the loop
+	jz	.shiftRightLoop
 	mov	rbx,	rdx
+
+	pop	rax
 	pop	rdx	
 
 	ret
@@ -108,13 +109,12 @@ decode_indexValue:
 ; unencoded indexValue in rdx
 ; returns encoded indexValue in rbx
 encode_indexValue:
-	sub	rbx,	2	; remove encoded size, size
-.shiftLeftloop:
 	push	rdx
+.shiftLeftloop:
 	shl	rdx,	1
 	dec	rbx
-	cmp	rbx,	0
-	jmp	.shiftLeftloop
+	; cmp	rbx,	0
+	jz	.shiftLeftloop
 	shl	rax,	62
 	or	rbx,	rax
 	pop	rdx
