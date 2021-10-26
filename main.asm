@@ -73,7 +73,7 @@ _start:
 	call	print_rcx
 	mov	rcx,	LF
 	call	print_rcx
-	call	index__set_get_test1
+	call	index__set_get_test_all
 
 
 
@@ -87,6 +87,7 @@ _start:
 
 ; .data contains constant variables ?
 section .data
+
     filename_test db "test.txt", 0
     fd_test dq 0
 
@@ -101,3 +102,4 @@ section .data
 ; .bss contains variable variables ?
 section .bss
 variable: RESB 1 ; reserve 1 byte for the variable variable
+bin_array_64Bit: RESB	67 ;	db	"0000000000000000000000000000000000000000000000000000000000000000b",	0Ah,	0h

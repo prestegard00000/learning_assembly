@@ -91,7 +91,7 @@ decode_indexValue:
 	call get_indexSize_decoded	; into rbx
 
 	shl	rdx,	2	; cut off index encoding **!** this likely doesn't work
-	shr	rdx,	2
+	shr	rdx,	1
 .shiftRightLoop:
 	shr	rdx,	1	; 
 	dec	rbx
@@ -116,6 +116,7 @@ encode_indexValue:
 	; cmp	rbx,	0
 	jz	.shiftLeftloop
 	shl	rax,	62
+	mov	rbx,	rdx
 	or	rbx,	rax
 	pop	rdx
 	ret

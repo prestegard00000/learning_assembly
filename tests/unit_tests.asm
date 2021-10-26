@@ -45,17 +45,48 @@
 ; **!** could use some push and pop to make it safer
 ; **!** could use a throw error mechanism
 
+index__set_get_test_all:
+	call	index__set_get_test1
+	call	index__set_get_test2
+	call	index__set_get_test3
+	call	index__set_get_test4
+	ret
 
 index__set_get_test1:
+	push	rdx
 	mov	rdx,	0
-	mov	rcx,	msg1
-	call	print_rcx
+	call	index__set_get_test_rdx
+	pop	rdx
+	ret
+
+index__set_get_test2:
+	push	rdx
+	mov	rdx,	1
+	call	index__set_get_test_rdx
+	pop	rdx
+	ret
+
+index__set_get_test3:
+	push	rdx
+	mov	rdx,	36546848
+	call	index__set_get_test_rdx
+	pop	rdx
+	ret
+
+index__set_get_test4:
+	push	rdx
+	mov	rdx,	6648634333
+	call	index__set_get_test_rdx
+	pop	rdx
+	ret
+
+index__set_get_test_rdx:
+	mov	rax,	3	; print the binary of rdx
+	call	print_binary_register
 	call	set_indexValue_encoded
-	mov	rcx,	msg1
-	call	print_rcx
 	call	get_indexValue_decoded
-	mov	rcx,	msg1
-	call	print_rcx
+	mov	rax,	2	; print the binary of rcx
+	call	print_binary_register
 	cmp	rbx,	0
 	jmp	.passed
 	mov	rcx,	msg_failed

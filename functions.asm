@@ -89,6 +89,148 @@ print_rcx:
 
 
 ;---------------------------------------------------------------------------------
+; get register id via rax
+; **!** this picker needs to be outside rax, so rax can be printed too
+; push register values
+; convert register into n bit array
+; call print function
+; pop registers
+; const function
+print_binary_register:
+	; push values
+	; find register
+	; get register size
+	; those two can be pushed together
+	push	rdx
+
+	cmp	rax,	1
+	je	.register_rbx
+	cmp	rax,	2
+	je	.register_rcx
+	cmp	rax,	3
+	je	.register_rdx
+	cmp	rax,	4
+	je	.register_rsp
+	cmp	rax,	5
+	je	.register_rbp
+	cmp	rax,	6
+	je	.register_rsi
+	cmp	rax,	7
+	je	.register_rdi
+	cmp	rax,	8
+	je	.register_r8
+	cmp	rax,	9
+	je	.register_r9
+	cmp	rax,	10
+	je	.register_r10
+	cmp	rax,	11
+	je	.register_r11
+	cmp	rax,	12
+	je	.register_r12
+	cmp	rax,	13
+	je	.register_r13
+	cmp	rax,	14
+	je	.register_r14
+	cmp	rax,	15
+	je	.register_r15
+.register_rbx:
+	mov	rdx,	rbx
+	jmp	.register64_loaded
+.register_rcx:
+	mov	rdx,	rbx
+	jmp	.register64_loaded
+	cmp	rax,	3
+.register_rdx:
+	jmp	.register64_loaded
+.register_rsp:
+	mov	rdx,	rsp
+	jmp	.register64_loaded
+.register_rbp:
+	mov	rdx,	rbp
+	jmp	.register64_loaded
+.register_rsi:
+	mov	rdx,	rsi
+	jmp	.register64_loaded
+.register_rdi:
+	mov	rdx,	rdi
+	jmp	.register64_loaded
+.register_r8:
+	mov	rdx,	r8
+	jmp	.register64_loaded
+.register_r9:
+	mov	rdx,	r9
+	jmp	.register64_loaded
+.register_r10:
+	mov	rdx,	r10
+	jmp	.register64_loaded
+.register_r11:
+	mov	rdx,	r11
+	jmp	.register64_loaded
+.register_r12:
+	mov	rdx,	r12
+	jmp	.register64_loaded
+.register_r13:
+	mov	rdx,	r13
+	jmp	.register64_loaded
+.register_r14:
+	mov	rdx,	r14
+	jmp	.register64_loaded
+.register_r15:
+	mov	rdx,	r15
+
+.register64_loaded:
+	push	rcx
+	mov	rcx,	64
+	push	r9	; inverted counter
+	mov	r9,	0
+	push	r8	; load string array for binary	
+	mov	r8,	bin_array_64Bit
+.register64_loop: ; this loop could be for all the register sizes
+	shl	rdx,	1
+	; cmp overflow
+	jc	.register64_one	;if there is overflow, then jump
+	push	r9
+	mov	r9,	'0'
+	mov	[r8],	r9
+	pop	r9
+	jmp	.register64_found
+.register64_one:
+	push	r9
+	mov	r9,	'1'
+	mov	[r8],	r9
+	pop	r9
+.register64_found:
+	
+	inc	r8
+	dec	rcx
+	jnz	.register64_loop
+	; does this array need a zero terminal?
+	mov	r9,	'b'
+	mov	[r8],	r9
+	inc	r8
+	mov	r9,	0Ah
+	mov	[r8],	r9
+	inc	r8
+	mov	r9,	0h
+	mov	[r8],	r9
+	mov	rcx,	bin_array_64Bit	;r8 is now pointing at the end of bin_array_64Bit	
+	call	print_rcx
+
+	pop	r8
+	pop	r9
+	pop	rcx
+	pop	rdx
+
+	; clear rcx register
+	; mov	register into rcx
+	; shift bits and add to printing array (up to register size)
+	; call print_rcx
+	; pop registers
+	ret
+	
+
+
+;---------------------------------------------------------------------------------
 ; get string length of string in rcx
 ; return in rax
 ; *!* does it need to be rcx->rbx and rcx->rax?
