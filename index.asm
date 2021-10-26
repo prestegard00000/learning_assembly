@@ -20,8 +20,8 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-; %include 'functions.asm' need to pragma each asm file
-
+%ifndef index
+	%define index
 ; non-negative lookup numbers
 ; first two bits are size
 ; 00 - four bits total, two for the size, two for the index
@@ -204,3 +204,6 @@ cmp_indices:
     ; if regA < regB zero flag is false
     ; if regA <> regB then negative flag is false
     ret
+
+
+%endif

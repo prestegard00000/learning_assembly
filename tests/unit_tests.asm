@@ -42,6 +42,8 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
+%ifndef tests
+	%define tests
 ; **!** could use some push and pop to make it safer
 ; **!** could use a throw error mechanism
 
@@ -99,4 +101,5 @@ index__set_get_test_rdx:
 .end_test:
 	ret
 	
-	
+
+%endif	

@@ -19,7 +19,8 @@
 ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
-
+%ifndef functions
+	%define functions
 section .text ;section .text in an include file did not throw an error
 
 ;---------------------------------------------------------------------------------
@@ -139,7 +140,7 @@ print_binary_register:
 .register_rcx:
 	mov	rdx,	rbx
 	jmp	.register64_loaded
-	cmp	rax,	3
+	cmp	rax,	3	; **!** this never gets run ?
 .register_rdx:
 	jmp	.register64_loaded
 .register_rsp:
@@ -189,30 +190,21 @@ print_binary_register:
 	shl	rdx,	1
 	; cmp overflow
 	jc	.register64_one	;if there is overflow, then jump
-	push	r9
-	mov	r9,	'0'
-	mov	[r8],	r9
-	pop	r9
+	mov	byte	[r8],	'0'
 	jmp	.register64_found
 .register64_one:
-	push	r9
-	mov	r9,	'1'
-	mov	[r8],	r9
-	pop	r9
+	mov	byte	[r8],	'1'
 .register64_found:
 	
 	inc	r8
 	dec	rcx
 	jnz	.register64_loop
 	; does this array need a zero terminal?
-	mov	r9,	'b'
-	mov	[r8],	r9
+	mov	byte	[r8],	'b'
 	inc	r8
-	mov	r9,	0Ah
-	mov	[r8],	r9
+	mov	byte	[r8],	0Ah
 	inc	r8
-	mov	r9,	0h
-	mov	[r8],	r9
+	mov	byte	[r8],	0h
 	mov	rcx,	bin_array_64Bit	;r8 is now pointing at the end of bin_array_64Bit	
 	call	print_rcx
 
@@ -271,3 +263,5 @@ QUIT:
 
 ; section .bss ;section .bss in an include file did throw an error
 ; functionVariable: RESB 1 ; reserve 1 byte for the variable functionVariable
+
+%endif
