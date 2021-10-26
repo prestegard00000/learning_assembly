@@ -95,9 +95,9 @@ section .data
 	msg_passed	db	".",	0Ah,	0h
 	msg_failed	db	"x",	0Ah,	0h
     msg1  db "Hello world!", 0Ah, 0h
-    LF    db 0AH   ; 'line feed'
-    zero  db 30H   ; '0'
-    one   db 31H   ; '1'
+    LF    db 0AH, 0h   ; 'line feed'
+    zero  db 30H, 0h   ; '0'
+    one   db 31H, 0h   ; '1'
 
 ; .bss contains variable variables ?
 section .bss
