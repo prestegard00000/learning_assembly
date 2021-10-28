@@ -47,6 +47,20 @@
 ; **!** could use some push and pop to make it safer
 ; **!** could use a throw error mechanism
 
+conversion_binaryTObaseTEST:
+	push	rdx
+	push	rax
+	push	rcx
+	mov	rax, 10
+	mov	rdx, 15894
+	call convertBinaryToBase_String
+	mov	rcx,	rax
+	call	print_rcx
+	pop	rcx
+	pop	rax
+	pop	rdx
+	ret
+
 index__set_get_test_all:
 	call	index__set_get_test1
 	call	index__set_get_test2

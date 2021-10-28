@@ -1,0 +1,1266 @@
+
+main.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <fileCreate>:
+	pop	rdx
+	pop	rcx
+	pop	rax
+	ret
+
+
+   0:	48 89 f9             	mov    %rdi,%rcx
+
+   3:	e8 d5 01 00 00       	call   1dd <slen>
+;---------------------------------------------------------------------------------
+   8:	48 89 d0             	mov    %rdx,%rax
+; void fileClose(fileDiscriptorAddress rbx)
+   b:	48 be 42 00 00 00 00 	movabs $0x42,%rsi
+  12:	00 00 00 
+fileClose:
+  15:	48 ba b6 01 00 00 00 	movabs $0x1b6,%rdx
+  1c:	00 00 00 
+   mov   rdi, [rbx]
+  1f:	48 b8 02 00 00 00 00 	movabs $0x2,%rax
+  26:	00 00 00 
+   mov   rax, 3		; sys_close for syscall
+  29:	0f 05                	syscall 
+   syscall
+  2b:	48 89 03             	mov    %rax,(%rbx)
+   ret
+  2e:	c3                   	ret    
+
+000000000000002f <fileWrite>:
+   
+
+
+;---------------------------------------------------------------------------------
+; rcx contains value(string) to print
+  2f:	50                   	push   %rax
+print_rcx:
+  30:	51                   	push   %rcx
+   push  rdx
+  31:	52                   	push   %rdx
+   push  rcx
+  32:	48 89 ce             	mov    %rcx,%rsi
+   push  rbx
+  35:	e8 a3 01 00 00       	call   1dd <slen>
+   push  rax
+  3a:	48 89 c2             	mov    %rax,%rdx
+   call slen
+  3d:	48 8b 3b             	mov    (%rbx),%rdi
+
+  40:	48 b8 01 00 00 00 00 	movabs $0x1,%rax
+  47:	00 00 00 
+   mov  rdx, rax
+  4a:	0f 05                	syscall 
+   mov  rbx, 1
+  4c:	5a                   	pop    %rdx
+   mov  rax, 4
+  4d:	59                   	pop    %rcx
+   int  80h
+  4e:	58                   	pop    %rax
+   syscall
+  4f:	c3                   	ret    
+
+0000000000000050 <fileClose>:
+   pop  rbx
+   pop  rcx
+   pop  rdx
+
+   ret
+
+  50:	48 8b 3b             	mov    (%rbx),%rdi
+
+  53:	48 b8 03 00 00 00 00 	movabs $0x3,%rax
+  5a:	00 00 00 
+;---------------------------------------------------------------------------------
+  5d:	0f 05                	syscall 
+; get register id via rax
+  5f:	c3                   	ret    
+
+0000000000000060 <print_rcx>:
+; push register values
+; convert register into n bit array
+; call print function
+; pop registers
+; const function
+print_binary_register:
+  60:	52                   	push   %rdx
+	; push values
+  61:	51                   	push   %rcx
+	; find register
+  62:	53                   	push   %rbx
+	; get register size
+  63:	50                   	push   %rax
+	; those two can be pushed together
+  64:	e8 74 01 00 00       	call   1dd <slen>
+	push	rdx
+
+  69:	48 89 c2             	mov    %rax,%rdx
+	cmp	rax,	1
+  6c:	48 bb 01 00 00 00 00 	movabs $0x1,%rbx
+  73:	00 00 00 
+	je	.register_rbx
+  76:	48 b8 04 00 00 00 00 	movabs $0x4,%rax
+  7d:	00 00 00 
+	cmp	rax,	2
+  80:	cd 80                	int    $0x80
+	je	.register_rcx
+  82:	0f 05                	syscall 
+	cmp	rax,	3
+  84:	58                   	pop    %rax
+	je	.register_rdx
+  85:	5b                   	pop    %rbx
+	cmp	rax,	4
+  86:	59                   	pop    %rcx
+	je	.register_rsp
+  87:	5a                   	pop    %rdx
+	cmp	rax,	5
+	je	.register_rbp
+  88:	c3                   	ret    
+
+0000000000000089 <print_binary_register>:
+	cmp	rax,	11
+	je	.register_r11
+	cmp	rax,	12
+	je	.register_r12
+	cmp	rax,	13
+	je	.register_r13
+  89:	52                   	push   %rdx
+	cmp	rax,	14
+	je	.register_r14
+  8a:	48 3d 01 00 00 00    	cmp    $0x1,%rax
+	cmp	rax,	15
+  90:	74 70                	je     102 <print_binary_register.register_rbx>
+	je	.register_r15
+  92:	48 3d 02 00 00 00    	cmp    $0x2,%rax
+.register_rbx:
+  98:	74 70                	je     10a <print_binary_register.register_rcx>
+	mov	rdx,	rbx
+  9a:	48 3d 03 00 00 00    	cmp    $0x3,%rax
+	jmp	.register64_loaded
+  a0:	74 76                	je     118 <print_binary_register.register_rdx>
+.register_rcx:
+  a2:	48 3d 04 00 00 00    	cmp    $0x4,%rax
+	mov	rdx,	rbx
+  a8:	74 73                	je     11d <print_binary_register.register_rsp>
+	jmp	.register64_loaded
+  aa:	48 3d 05 00 00 00    	cmp    $0x5,%rax
+	cmp	rax,	3	; **!** this never gets run ?
+  b0:	74 73                	je     125 <print_binary_register.register_rbp>
+.register_rdx:
+  b2:	48 3d 06 00 00 00    	cmp    $0x6,%rax
+	jmp	.register64_loaded
+  b8:	74 73                	je     12d <print_binary_register.register_rsi>
+.register_rsp:
+  ba:	48 3d 07 00 00 00    	cmp    $0x7,%rax
+	mov	rdx,	rsp
+  c0:	74 73                	je     135 <print_binary_register.register_rdi>
+	jmp	.register64_loaded
+  c2:	48 3d 08 00 00 00    	cmp    $0x8,%rax
+.register_rbp:
+  c8:	74 73                	je     13d <print_binary_register.register_r8>
+	mov	rdx,	rbp
+  ca:	48 3d 09 00 00 00    	cmp    $0x9,%rax
+	jmp	.register64_loaded
+  d0:	74 73                	je     145 <print_binary_register.register_r9>
+.register_rsi:
+  d2:	48 3d 0a 00 00 00    	cmp    $0xa,%rax
+	mov	rdx,	rsi
+  d8:	74 73                	je     14d <print_binary_register.register_r10>
+	jmp	.register64_loaded
+  da:	48 3d 0b 00 00 00    	cmp    $0xb,%rax
+.register_rdi:
+  e0:	74 73                	je     155 <print_binary_register.register_r11>
+	mov	rdx,	rdi
+  e2:	48 3d 0c 00 00 00    	cmp    $0xc,%rax
+	jmp	.register64_loaded
+  e8:	74 73                	je     15d <print_binary_register.register_r12>
+.register_r8:
+  ea:	48 3d 0d 00 00 00    	cmp    $0xd,%rax
+	mov	rdx,	r8
+  f0:	74 73                	je     165 <print_binary_register.register_r13>
+	jmp	.register64_loaded
+  f2:	48 3d 0e 00 00 00    	cmp    $0xe,%rax
+.register_r9:
+  f8:	74 73                	je     16d <print_binary_register.register_r14>
+	mov	rdx,	r9
+  fa:	48 3d 0f 00 00 00    	cmp    $0xf,%rax
+	jmp	.register64_loaded
+ 100:	74 73                	je     175 <print_binary_register.register_r15>
+
+0000000000000102 <print_binary_register.register_rbx>:
+.register_r10:
+	mov	rdx,	r10
+ 102:	48 89 da             	mov    %rbx,%rdx
+	jmp	.register64_loaded
+ 105:	e9 6e 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000010a <print_binary_register.register_rcx>:
+.register_r11:
+	mov	rdx,	r11
+ 10a:	48 89 da             	mov    %rbx,%rdx
+	jmp	.register64_loaded
+ 10d:	e9 66 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+.register_r12:
+ 112:	48 3d 03 00 00 00    	cmp    $0x3,%rax
+
+0000000000000118 <print_binary_register.register_rdx>:
+	mov	rdx,	r12
+	jmp	.register64_loaded
+ 118:	e9 5b 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000011d <print_binary_register.register_rsp>:
+.register_r13:
+	mov	rdx,	r13
+ 11d:	48 89 e2             	mov    %rsp,%rdx
+	jmp	.register64_loaded
+ 120:	e9 53 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+0000000000000125 <print_binary_register.register_rbp>:
+.register_r14:
+	mov	rdx,	r14
+ 125:	48 89 ea             	mov    %rbp,%rdx
+	jmp	.register64_loaded
+ 128:	e9 4b 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000012d <print_binary_register.register_rsi>:
+.register_r15:
+	mov	rdx,	r15
+ 12d:	48 89 f2             	mov    %rsi,%rdx
+
+ 130:	e9 43 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+0000000000000135 <print_binary_register.register_rdi>:
+.register64_loaded:
+	push	rcx
+ 135:	48 89 fa             	mov    %rdi,%rdx
+	mov	rcx,	64
+ 138:	e9 3b 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000013d <print_binary_register.register_r8>:
+	push	r9	; inverted counter
+	mov	r9,	0
+ 13d:	4c 89 c2             	mov    %r8,%rdx
+	push	r8	; load string array for binary	
+ 140:	e9 33 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+0000000000000145 <print_binary_register.register_r9>:
+	mov	r8,	register_array_64BitMax
+.register64_loop: ; this loop could be for all the register sizes
+ 145:	4c 89 ca             	mov    %r9,%rdx
+	shl	rdx,	1
+ 148:	e9 2b 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000014d <print_binary_register.register_r10>:
+	; cmp overflow
+	jc	.register64_one	;if there is overflow, then jump
+ 14d:	4c 89 d2             	mov    %r10,%rdx
+	mov	byte	[r8],	'0'
+ 150:	e9 23 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+0000000000000155 <print_binary_register.register_r11>:
+	jmp	.register64_found
+.register64_one:
+ 155:	4c 89 da             	mov    %r11,%rdx
+	mov	byte	[r8],	'1'
+ 158:	e9 1b 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000015d <print_binary_register.register_r12>:
+.register64_found:
+	
+ 15d:	4c 89 e2             	mov    %r12,%rdx
+	inc	r8
+ 160:	e9 13 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+0000000000000165 <print_binary_register.register_r13>:
+	dec	rcx
+	jnz	.register64_loop
+ 165:	4c 89 ea             	mov    %r13,%rdx
+	; does this array need a zero terminal?
+ 168:	e9 0b 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+000000000000016d <print_binary_register.register_r14>:
+	mov	byte	[r8],	'b'
+	inc	r8
+ 16d:	4c 89 f2             	mov    %r14,%rdx
+	mov	byte	[r8],	0Ah
+ 170:	e9 03 00 00 00       	jmp    178 <print_binary_register.register64_loaded>
+
+0000000000000175 <print_binary_register.register_r15>:
+	inc	r8
+	mov	byte	[r8],	0h
+ 175:	4c 89 fa             	mov    %r15,%rdx
+
+0000000000000178 <print_binary_register.register64_loaded>:
+	mov	rcx,	register_array_64BitMax	;r8 is now pointing at the end of register_array_64BitMax	
+	call	print_rcx
+
+ 178:	51                   	push   %rcx
+	pop	r8
+ 179:	48 b9 40 00 00 00 00 	movabs $0x40,%rcx
+ 180:	00 00 00 
+	pop	r9
+ 183:	41 51                	push   %r9
+	pop	rcx
+ 185:	49 b9 00 00 00 00 00 	movabs $0x0,%r9
+ 18c:	00 00 00 
+	pop	rdx
+ 18f:	41 50                	push   %r8
+
+ 191:	49 b8 00 00 00 00 00 	movabs $0x0,%r8
+ 198:	00 00 00 
+
+000000000000019b <print_binary_register.register64_loop>:
+	; clear rcx register
+	; mov	register into rcx
+ 19b:	48 d1 e2             	shl    %rdx
+	; shift bits and add to printing array (up to register size)
+	; call print_rcx
+ 19e:	72 09                	jb     1a9 <print_binary_register.register64_one>
+	; pop registers
+ 1a0:	41 c6 00 30          	movb   $0x30,(%r8)
+	ret
+ 1a4:	e9 04 00 00 00       	jmp    1ad <print_binary_register.register64_found>
+
+00000000000001a9 <print_binary_register.register64_one>:
+	
+
+ 1a9:	41 c6 00 31          	movb   $0x31,(%r8)
+
+00000000000001ad <print_binary_register.register64_found>:
+
+;---------------------------------------------------------------------------------
+; get string length of string in rcx
+ 1ad:	49 ff c0             	inc    %r8
+; return in rax
+ 1b0:	48 ff c9             	dec    %rcx
+; *!* does it need to be rcx->rbx and rcx->rax?
+ 1b3:	75 e6                	jne    19b <print_binary_register.register64_loop>
+slen:
+   push rcx
+ 1b5:	41 c6 00 62          	movb   $0x62,(%r8)
+   push rbx
+ 1b9:	49 ff c0             	inc    %r8
+   mov  rbx, rcx
+ 1bc:	41 c6 00 0a          	movb   $0xa,(%r8)
+   mov  rax, rcx
+ 1c0:	49 ff c0             	inc    %r8
+
+ 1c3:	41 c6 00 00          	movb   $0x0,(%r8)
+.nextchar:
+ 1c7:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 1ce:	00 00 00 
+   cmp  byte [rax], 0
+ 1d1:	e8 8a fe ff ff       	call   60 <print_rcx>
+   jz   .finished
+   inc  rax
+ 1d6:	41 58                	pop    %r8
+   jmp  .nextchar
+ 1d8:	41 59                	pop    %r9
+
+ 1da:	59                   	pop    %rcx
+.finished:
+ 1db:	5a                   	pop    %rdx
+   pop  rbx
+   pop  rcx
+
+   ret
+
+;---------------------------------------------------------------------------------
+ 1dc:	c3                   	ret    
+
+00000000000001dd <slen>:
+	push	rax
+	push	rbx
+	push	rcx
+	mov	rcx,	64
+	mov	rbx,	rdx
+	mov	rax,	rdx
+ 1dd:	51                   	push   %rcx
+.leadingZerosloop:
+ 1de:	53                   	push   %rbx
+	;	mul	rbx,	10	; mul bx -> ax = ax*bx with overflow into dx
+ 1df:	48 89 cb             	mov    %rcx,%rbx
+	jc	.valueLoop
+ 1e2:	48 89 c8             	mov    %rcx,%rax
+
+00000000000001e5 <slen.nextchar>:
+	mov	rax,	rbx
+	dec	rcx
+	jnz	.leadingZerosloop
+ 1e5:	80 38 00             	cmpb   $0x0,(%rax)
+	mov	rcx,	register_array_64BitMax
+ 1e8:	74 08                	je     1f2 <slen.finished>
+	mov	byte	[rcx],	'0'
+ 1ea:	48 ff c0             	inc    %rax
+	jmp	.done
+ 1ed:	e9 f3 ff ff ff       	jmp    1e5 <slen.nextchar>
+
+00000000000001f2 <slen.finished>:
+
+.valueLoop:
+	;div	rbx,	10
+ 1f2:	48 29 d8             	sub    %rbx,%rax
+	sub	rax,	rbx
+ 1f5:	5b                   	pop    %rbx
+	
+ 1f6:	59                   	pop    %rcx
+	
+	dec	rcx
+ 1f7:	c3                   	ret    
+
+00000000000001f8 <print_rdx_decimal>:
+	jnz	.valueLoop
+
+
+.done:
+	inc	rcx
+	mov	byte	[rcx],	0h
+ 1f8:	50                   	push   %rax
+	mov	rcx,	register_array_64BitMax
+ 1f9:	53                   	push   %rbx
+	call	print_rcx
+ 1fa:	51                   	push   %rcx
+
+ 1fb:	48 b9 40 00 00 00 00 	movabs $0x40,%rcx
+ 202:	00 00 00 
+	pop	rcx
+ 205:	48 89 d3             	mov    %rdx,%rbx
+	pop	rbx
+ 208:	48 89 d0             	mov    %rdx,%rax
+
+000000000000020b <print_rdx_decimal.leadingZerosloop>:
+	pop	rax
+	ret
+
+ 20b:	72 1a                	jb     227 <print_rdx_decimal.valueLoop>
+;---------------------------------------------------------------------------------
+ 20d:	48 89 d8             	mov    %rbx,%rax
+; convert the binary number in rdx into a string of digits with base in rax
+ 210:	48 ff c9             	dec    %rcx
+; return string in rax
+ 213:	75 f6                	jne    20b <print_rdx_decimal.leadingZerosloop>
+convertBinaryToBase_String:
+ 215:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 21c:	00 00 00 
+	;do a zero comparison and exit early
+ 21f:	c6 01 30             	movb   $0x30,(%rcx)
+	push	rbx
+ 222:	e9 08 00 00 00       	jmp    22f <print_rdx_decimal.done>
+
+0000000000000227 <print_rdx_decimal.valueLoop>:
+	push	rcx
+	push	rdx
+	push	r8
+	push	r9
+ 227:	48 29 d8             	sub    %rbx,%rax
+	mov	rbx,	rax
+	mov	r8,	register_array_64BitMax
+	mov	rdx,	0
+ 22a:	48 ff c9             	dec    %rcx
+	;do a base two conversion and exit early
+ 22d:	75 f8                	jne    227 <print_rdx_decimal.valueLoop>
+
+000000000000022f <print_rdx_decimal.done>:
+.loop:
+	cmp	r8,	rax
+	jle	.loop2
+	mul	rbx	; unsigned multiplication, rax = rax * rbx, with overflow into rdx
+ 22f:	48 ff c1             	inc    %rcx
+	;	rdx should be zerod, so if it isn't then .tooBig
+ 232:	c6 01 00             	movb   $0x0,(%rcx)
+	cmp	rdx,	0
+ 235:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 23c:	00 00 00 
+	jnz	.tooBig
+ 23f:	e8 1c fe ff ff       	call   60 <print_rcx>
+	; jc	.tooBig
+	jmp	.loop
+ 244:	59                   	pop    %rcx
+.tooBig:
+ 245:	5b                   	pop    %rbx
+	nop
+ 246:	58                   	pop    %rax
+	; **!** need a way to handle rax^n< rdx <rax^n+1
+ 247:	c3                   	ret    
+
+0000000000000248 <convertBinaryToBase_String>:
+	; rdx should be zero'd so move rdx to r10
+	;div	rbx	; rax now has the amount to divide by
+	mov	rcx,	rax	; move it to rcx so r10 can be the numerator
+	mov	rax,	r9	
+	div	rcx
+	mov	rbx,	rax
+ 248:	53                   	push   %rbx
+	;div	
+ 249:	51                   	push   %rcx
+	mov	r9,	rdx
+ 24a:	52                   	push   %rdx
+	
+ 24b:	41 50                	push   %r8
+; **!** conditional move CMOVcc	reg32/m32	; o32 of 40+cc/r
+ 24d:	41 51                	push   %r9
+	; convert rcx to a char
+ 24f:	48 89 c3             	mov    %rax,%rbx
+	cmp	rax,	0
+ 252:	49 b8 00 00 00 00 00 	movabs $0x0,%r8
+ 259:	00 00 00 
+	je	.zero
+ 25c:	48 ba 00 00 00 00 00 	movabs $0x0,%rdx
+ 263:	00 00 00 
+
+0000000000000266 <convertBinaryToBase_String.loop>:
+	cmp	rax,	1
+	je	.one
+	cmp	rax,	2
+ 266:	49 39 c0             	cmp    %rax,%r8
+	je	.two
+ 269:	7e 12                	jle    27d <convertBinaryToBase_String.loop2>
+	cmp	rax,	3
+ 26b:	48 f7 e3             	mul    %rbx
+	je	.three
+	cmp	rax,	4
+ 26e:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+	je	.four
+ 275:	75 05                	jne    27c <convertBinaryToBase_String.tooBig>
+	cmp	rax,	5
+	je	.five
+ 277:	e9 ea ff ff ff       	jmp    266 <convertBinaryToBase_String.loop>
+
+000000000000027c <convertBinaryToBase_String.tooBig>:
+	cmp	rax,	6
+	je	.six
+ 27c:	90                   	nop
+
+000000000000027d <convertBinaryToBase_String.loop2>:
+	cmp	rax,	7
+	je	.seven
+	cmp	rax,	8
+	je	.eight
+	cmp	rax,	9
+ 27d:	48 89 c1             	mov    %rax,%rcx
+	je	.nine
+ 280:	4c 89 c8             	mov    %r9,%rax
+	cmp	rax,	10
+ 283:	48 f7 f1             	div    %rcx
+	je	.ten
+ 286:	48 89 c3             	mov    %rax,%rbx
+	cmp	rax,	11
+	je	.eleven
+ 289:	49 89 d1             	mov    %rdx,%r9
+	cmp	rax,	12
+	je	.twelve
+	cmp	rax,	13
+	je	.thirteen
+ 28c:	48 3d 00 00 00 00    	cmp    $0x0,%rax
+	cmp	rax,	14
+ 292:	0f 84 b4 00 00 00    	je     34c <convertBinaryToBase_String.zero>
+	je	.fourteen
+ 298:	48 3d 01 00 00 00    	cmp    $0x1,%rax
+	cmp	rax,	15
+ 29e:	0f 84 b7 00 00 00    	je     35b <convertBinaryToBase_String.one>
+	je	.fifteen
+ 2a4:	48 3d 02 00 00 00    	cmp    $0x2,%rax
+	
+ 2aa:	0f 84 ba 00 00 00    	je     36a <convertBinaryToBase_String.two>
+.zero:
+ 2b0:	48 3d 03 00 00 00    	cmp    $0x3,%rax
+	mov	rax,	'0'
+ 2b6:	0f 84 bd 00 00 00    	je     379 <convertBinaryToBase_String.three>
+	jmp	.found
+ 2bc:	48 3d 04 00 00 00    	cmp    $0x4,%rax
+.one:
+ 2c2:	0f 84 c0 00 00 00    	je     388 <convertBinaryToBase_String.four>
+	mov	rax,	'1'
+ 2c8:	48 3d 05 00 00 00    	cmp    $0x5,%rax
+	jmp	.found
+ 2ce:	0f 84 c3 00 00 00    	je     397 <convertBinaryToBase_String.five>
+.two:
+ 2d4:	48 3d 06 00 00 00    	cmp    $0x6,%rax
+	mov	rax,	'2'
+ 2da:	0f 84 c6 00 00 00    	je     3a6 <convertBinaryToBase_String.six>
+	jmp	.found
+ 2e0:	48 3d 07 00 00 00    	cmp    $0x7,%rax
+.three:
+ 2e6:	0f 84 c9 00 00 00    	je     3b5 <convertBinaryToBase_String.seven>
+	mov	rax,	'3'
+ 2ec:	48 3d 08 00 00 00    	cmp    $0x8,%rax
+	jmp	.found
+ 2f2:	0f 84 cc 00 00 00    	je     3c4 <convertBinaryToBase_String.eight>
+.four:
+ 2f8:	48 3d 09 00 00 00    	cmp    $0x9,%rax
+	mov	rax,	'4'
+ 2fe:	0f 84 cf 00 00 00    	je     3d3 <convertBinaryToBase_String.nine>
+	jmp	.found
+ 304:	48 3d 0a 00 00 00    	cmp    $0xa,%rax
+.five:
+ 30a:	0f 84 d2 00 00 00    	je     3e2 <convertBinaryToBase_String.ten>
+	mov	rax,	'5'
+ 310:	48 3d 0b 00 00 00    	cmp    $0xb,%rax
+	jmp	.found
+ 316:	0f 84 d5 00 00 00    	je     3f1 <convertBinaryToBase_String.eleven>
+.six:
+ 31c:	48 3d 0c 00 00 00    	cmp    $0xc,%rax
+	mov	rax,	'6'
+ 322:	0f 84 d8 00 00 00    	je     400 <convertBinaryToBase_String.twelve>
+	jmp	.found
+ 328:	48 3d 0d 00 00 00    	cmp    $0xd,%rax
+.seven:
+ 32e:	0f 84 db 00 00 00    	je     40f <convertBinaryToBase_String.thirteen>
+	mov	rax,	'7'
+ 334:	48 3d 0e 00 00 00    	cmp    $0xe,%rax
+	jmp	.found
+ 33a:	0f 84 de 00 00 00    	je     41e <convertBinaryToBase_String.fourteen>
+.eight:
+ 340:	48 3d 0f 00 00 00    	cmp    $0xf,%rax
+	mov	rax,	'8'
+ 346:	0f 84 e1 00 00 00    	je     42d <convertBinaryToBase_String.fifteen>
+
+000000000000034c <convertBinaryToBase_String.zero>:
+	jmp	.found
+.nine:
+	mov	rax,	'9'
+ 34c:	48 b8 30 00 00 00 00 	movabs $0x30,%rax
+ 353:	00 00 00 
+	jmp	.found
+ 356:	e9 dc 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+000000000000035b <convertBinaryToBase_String.one>:
+.ten:
+	mov	rax,	'A'
+ 35b:	48 b8 31 00 00 00 00 	movabs $0x31,%rax
+ 362:	00 00 00 
+	jmp	.found
+ 365:	e9 cd 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+000000000000036a <convertBinaryToBase_String.two>:
+.eleven:
+	mov	rax,	'B'
+ 36a:	48 b8 32 00 00 00 00 	movabs $0x32,%rax
+ 371:	00 00 00 
+	jmp	.found
+ 374:	e9 be 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+0000000000000379 <convertBinaryToBase_String.three>:
+.twelve:
+	mov	rax,	'C'
+ 379:	48 b8 33 00 00 00 00 	movabs $0x33,%rax
+ 380:	00 00 00 
+	jmp	.found
+ 383:	e9 af 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+0000000000000388 <convertBinaryToBase_String.four>:
+.thirteen:
+	mov	rax,	'D'
+ 388:	48 b8 34 00 00 00 00 	movabs $0x34,%rax
+ 38f:	00 00 00 
+	jmp	.found
+ 392:	e9 a0 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+0000000000000397 <convertBinaryToBase_String.five>:
+.fourteen:
+	mov	rax,	'E'
+ 397:	48 b8 35 00 00 00 00 	movabs $0x35,%rax
+ 39e:	00 00 00 
+	jmp	.found
+ 3a1:	e9 91 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+00000000000003a6 <convertBinaryToBase_String.six>:
+.fifteen:
+	mov	rax,	'F'
+ 3a6:	48 b8 36 00 00 00 00 	movabs $0x36,%rax
+ 3ad:	00 00 00 
+
+ 3b0:	e9 82 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+00000000000003b5 <convertBinaryToBase_String.seven>:
+.found:
+
+ 3b5:	48 b8 37 00 00 00 00 	movabs $0x37,%rax
+ 3bc:	00 00 00 
+
+ 3bf:	e9 73 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+00000000000003c4 <convertBinaryToBase_String.eight>:
+	; add to r8
+	mov	[r8],	rax
+ 3c4:	48 b8 38 00 00 00 00 	movabs $0x38,%rax
+ 3cb:	00 00 00 
+	inc	r8
+ 3ce:	e9 64 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+00000000000003d3 <convertBinaryToBase_String.nine>:
+	cmp	rcx,	1
+	je	.done
+ 3d3:	48 b8 39 00 00 00 00 	movabs $0x39,%rax
+ 3da:	00 00 00 
+	mov	rax,	rcx
+ 3dd:	e9 55 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+00000000000003e2 <convertBinaryToBase_String.ten>:
+	jmp	.loop2
+.done:
+ 3e2:	48 b8 41 00 00 00 00 	movabs $0x41,%rax
+ 3e9:	00 00 00 
+	;	add the b{base number}
+ 3ec:	e9 46 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+00000000000003f1 <convertBinaryToBase_String.eleven>:
+	mov	byte	[r8],	0h
+	;mov	[r8],	
+ 3f1:	48 b8 42 00 00 00 00 	movabs $0x42,%rax
+ 3f8:	00 00 00 
+	
+ 3fb:	e9 37 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+0000000000000400 <convertBinaryToBase_String.twelve>:
+	mov	rax,	register_array_64BitMax
+
+ 400:	48 b8 43 00 00 00 00 	movabs $0x43,%rax
+ 407:	00 00 00 
+	pop	r9
+ 40a:	e9 28 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+000000000000040f <convertBinaryToBase_String.thirteen>:
+	pop	r8
+	pop	rdx
+ 40f:	48 b8 44 00 00 00 00 	movabs $0x44,%rax
+ 416:	00 00 00 
+	pop	rcx
+ 419:	e9 19 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+000000000000041e <convertBinaryToBase_String.fourteen>:
+	pop	rbx
+
+ 41e:	48 b8 45 00 00 00 00 	movabs $0x45,%rax
+ 425:	00 00 00 
+	ret
+ 428:	e9 0a 00 00 00       	jmp    437 <convertBinaryToBase_String.found>
+
+000000000000042d <convertBinaryToBase_String.fifteen>:
+
+;---------------------------------------------------------------------------------
+ 42d:	48 b8 46 00 00 00 00 	movabs $0x46,%rax
+ 434:	00 00 00 
+
+0000000000000437 <convertBinaryToBase_String.found>:
+; returns the number of bits in the rax register
+getSysMaxBits:
+	mov	rax, 64
+	ret
+
+;---------------------------------------------------------------------------------
+ 437:	49 89 00             	mov    %rax,(%r8)
+; quit program
+ 43a:	49 ff c0             	inc    %r8
+QUIT:
+ 43d:	48 81 f9 01 00 00 00 	cmp    $0x1,%rcx
+   mov rax, 60
+ 444:	74 08                	je     44e <convertBinaryToBase_String.done>
+   syscall
+ 446:	48 89 c8             	mov    %rcx,%rax
+   ret
+ 449:	e9 2f fe ff ff       	jmp    27d <convertBinaryToBase_String.loop2>
+
+000000000000044e <convertBinaryToBase_String.done>:
+
+;section .data ;section .data in an include file throws a segmentation fault
+;   msg2 db "hello mars!", 0Ah, 0h
+ 44e:	41 c6 00 00          	movb   $0x0,(%r8)
+
+; section .bss ;section .bss in an include file did throw an error
+; functionVariable: RESB 1 ; reserve 1 byte for the variable functionVariable
+ 452:	48 b8 00 00 00 00 00 	movabs $0x0,%rax
+ 459:	00 00 00 
+
+%endif
+ 45c:	41 59                	pop    %r9
+ 45e:	41 58                	pop    %r8
+ 460:	5a                   	pop    %rdx
+ 461:	59                   	pop    %rcx
+ 462:	5b                   	pop    %rbx
+ 463:	c3                   	ret    
+
+0000000000000464 <getSysMaxBits>:
+ 464:	48 b8 40 00 00 00 00 	movabs $0x40,%rax
+ 46b:	00 00 00 
+ 46e:	c3                   	ret    
+
+000000000000046f <QUIT>:
+ 46f:	48 b8 3c 00 00 00 00 	movabs $0x3c,%rax
+ 476:	00 00 00 
+ 479:	0f 05                	syscall 
+ 47b:	c3                   	ret    
+
+000000000000047c <decode_indexSize>:
+get_indexSize_encoded:
+	push	rbx
+	call	getSysMaxBits	; into rbx
+				; assume that all the registers are SysMaxBits
+	sub	rbx,	2	; get the number of bits to shift
+	mov	rax,	rdx
+ 47c:	48 bb 04 00 00 00 00 	movabs $0x4,%rbx
+ 483:	00 00 00 
+	shr	rax,	62	; **!** This value shouldn't be hard coded and needs a counted loop to fix it
+ 486:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+				; **!** however, nasm doesn't let rbx be the second value
+ 48d:	74 24                	je     4b3 <decode_indexSize.indexSizeDecoded>
+
+ 48f:	48 bb 08 00 00 00 00 	movabs $0x8,%rbx
+ 496:	00 00 00 
+	pop	rbx
+ 499:	48 81 fa 01 00 00 00 	cmp    $0x1,%rdx
+	ret
+ 4a0:	74 11                	je     4b3 <decode_indexSize.indexSizeDecoded>
+
+; encoded indexValue in rdx
+ 4a2:	e8 bd ff ff ff       	call   464 <getSysMaxBits>
+; return
+; rax encoded indexSize
+ 4a7:	48 81 fa 03 00 00 00 	cmp    $0x3,%rdx
+; rbx decoded indexSize
+ 4ae:	74 03                	je     4b3 <decode_indexSize.indexSizeDecoded>
+get_indexSize_decoded:
+ 4b0:	48 d1 eb             	shr    %rbx
+
+00000000000004b3 <decode_indexSize.indexSizeDecoded>:
+	push	rdx
+	call	get_indexSize_encoded	; returns endcoded size in rax
+
+ 4b3:	48 81 eb 02 00 00 00 	sub    $0x2,%rbx
+	mov	rdx,	rax
+	call	decode_indexSize
+ 4ba:	c3                   	ret    
+
+00000000000004bb <get_indexSize_encoded>:
+; encoded indexValue in rdx
+; return decoded indexValue in rbx
+decode_indexValue:
+	push rdx
+	push rax
+	call get_indexSize_decoded	; into rbx
+ 4bb:	53                   	push   %rbx
+
+ 4bc:	e8 a3 ff ff ff       	call   464 <getSysMaxBits>
+	shl	rdx,	2	; cut off index encoding **!** this likely doesn't work
+	shr	rdx,	1
+ 4c1:	48 81 eb 02 00 00 00 	sub    $0x2,%rbx
+.shiftRightLoop:
+ 4c8:	48 89 d0             	mov    %rdx,%rax
+	shr	rdx,	1	; 
+ 4cb:	48 c1 e8 3e          	shr    $0x3e,%rax
+	dec	rbx
+	;cmp	rbx,	0	; may need to add a single shift before the loop
+	jz	.shiftRightLoop
+ 4cf:	5b                   	pop    %rbx
+	mov	rbx,	rdx
+ 4d0:	c3                   	ret    
+
+00000000000004d1 <get_indexSize_decoded>:
+	pop	rax
+	pop	rdx	
+
+	ret
+
+; encoded indexSize in rax
+ 4d1:	52                   	push   %rdx
+; decoded indexSize in rbx   These two could exist in the same register
+ 4d2:	e8 e4 ff ff ff       	call   4bb <get_indexSize_encoded>
+; unencoded indexValue in rdx
+; returns encoded indexValue in rbx
+ 4d7:	48 89 c2             	mov    %rax,%rdx
+encode_indexValue:
+ 4da:	e8 9d ff ff ff       	call   47c <decode_indexSize>
+	push	rdx
+ 4df:	5a                   	pop    %rdx
+.shiftLeftloop:
+ 4e0:	c3                   	ret    
+
+00000000000004e1 <decode_indexValue>:
+	shl	rdx,	1
+	dec	rbx
+	; cmp	rbx,	0
+	jz	.shiftLeftloop
+	shl	rax,	62
+ 4e1:	52                   	push   %rdx
+	mov	rbx,	rdx
+ 4e2:	50                   	push   %rax
+	or	rbx,	rax
+ 4e3:	e8 e9 ff ff ff       	call   4d1 <get_indexSize_decoded>
+	pop	rdx
+	ret
+ 4e8:	48 c1 e2 02          	shl    $0x2,%rdx
+
+ 4ec:	48 d1 ea             	shr    %rdx
+
+00000000000004ef <decode_indexValue.shiftRightLoop>:
+
+; encoded indexValue in rdx
+ 4ef:	48 d1 ea             	shr    %rdx
+; return
+ 4f2:	48 ff cb             	dec    %rbx
+; decoded indexValue in rbx
+get_indexValue_decoded:
+ 4f5:	74 f8                	je     4ef <decode_indexValue.shiftRightLoop>
+	push	rdx
+ 4f7:	48 89 d3             	mov    %rdx,%rbx
+	call	get_indexSize_decoded
+	call	decode_indexValue
+ 4fa:	58                   	pop    %rax
+	pop	rdx
+ 4fb:	5a                   	pop    %rdx
+
+	ret
+ 4fc:	c3                   	ret    
+
+00000000000004fd <encode_indexValue>:
+set_indexValue_encoded:
+	; index value in rdx
+	; get the indexSize
+	; set register to zero
+	; place index value in register rbx
+	push	rdx
+ 4fd:	52                   	push   %rdx
+
+00000000000004fe <encode_indexValue.shiftLeftloop>:
+	call compute_indexSize_encoded	; set_indexSize
+	push	rax
+ 4fe:	48 d1 e2             	shl    %rdx
+	call	decode_indexSize
+ 501:	48 ff cb             	dec    %rbx
+	call	encode_indexValue
+	pop	rax
+ 504:	74 f8                	je     4fe <encode_indexValue.shiftLeftloop>
+	pop	rdx
+ 506:	48 c1 e0 3e          	shl    $0x3e,%rax
+
+ 50a:	48 89 d3             	mov    %rdx,%rbx
+
+ 50d:	48 09 c3             	or     %rax,%rbx
+	ret
+ 510:	5a                   	pop    %rdx
+
+ 511:	c3                   	ret    
+
+0000000000000512 <get_indexValue_decoded>:
+	; return four bits depending on value in rdx
+	; rdx does not have a size encoding on it and must be less than maxSysBits - 2 bits
+	; return
+	; rax
+	push	rcx
+	push	rdx
+ 512:	52                   	push   %rdx
+	shr	rdx,	2
+ 513:	e8 b9 ff ff ff       	call   4d1 <get_indexSize_decoded>
+	cmp	rdx,	0
+ 518:	e8 c4 ff ff ff       	call   4e1 <decode_indexValue>
+	je	.indexSize2
+ 51d:	5a                   	pop    %rdx
+	shr	rdx,	4
+	cmp	rdx,	0
+ 51e:	c3                   	ret    
+
+000000000000051f <set_indexValue_encoded>:
+	call	getSysMaxBits
+	mov	rax,	rbx
+	shr	rax,	1	; divide the SysMaxBits in half
+	sub	rax,	2	; take off two for the size encoding
+	mov	rcx,	0	; counter (should I use rdi instead?)
+.shiftLoop01:		;utilizing a loop as shift ops won't take a register for the number of bits to shift
+ 51f:	52                   	push   %rdx
+	shr	rdx,	1
+ 520:	e8 0e 00 00 00       	call   533 <compute_indexSize_encoded>
+	inc	rcx
+ 525:	50                   	push   %rax
+	cmp	rcx,	rax
+ 526:	e8 51 ff ff ff       	call   47c <decode_indexSize>
+	je	.shiftLoop01
+ 52b:	e8 cd ff ff ff       	call   4fd <encode_indexValue>
+
+ 530:	58                   	pop    %rax
+	cmp	rdx,	0
+ 531:	5a                   	pop    %rdx
+	je	.indexSizeHalfMax
+	; otherwise indexSize is max
+	mov	rax,	11b
+ 532:	c3                   	ret    
+
+0000000000000533 <compute_indexSize_encoded>:
+.indexSize2:
+	mov	rax,	00b
+	jmp	.indexFoundSize
+.indexSize4:
+	mov	rax,	01b
+	jmp	.indexFoundSize
+ 533:	51                   	push   %rcx
+.indexSizeHalfMax:
+ 534:	52                   	push   %rdx
+	mov	rax,	10b	; needs to check to see if the value is greater than (SysMaxBits - 2)
+ 535:	48 c1 ea 02          	shr    $0x2,%rdx
+.indexFoundSize:
+ 539:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+	pop	rdx
+ 540:	74 4b                	je     58d <compute_indexSize_encoded.indexSize2>
+	pop	rcx
+ 542:	48 c1 ea 04          	shr    $0x4,%rdx
+	ret
+ 546:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+
+ 54d:	74 4d                	je     59c <compute_indexSize_encoded.indexSize4>
+
+ 54f:	e8 10 ff ff ff       	call   464 <getSysMaxBits>
+; compare two indices
+ 554:	48 89 d8             	mov    %rbx,%rax
+; Greater Than
+ 557:	48 d1 e8             	shr    %rax
+cmp_indices:
+ 55a:	48 2d 02 00 00 00    	sub    $0x2,%rax
+    ; get index value from sized index in register a
+ 560:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 567:	00 00 00 
+
+000000000000056a <compute_indexSize_encoded.shiftLoop01>:
+    ; get index value from sized index in register b
+    ; premature optamization - compare the sizes first
+ 56a:	48 d1 ea             	shr    %rdx
+    ; then only when the sizes are the same, do the values need to be compared
+ 56d:	48 ff c1             	inc    %rcx
+    ; if regA > regB, then set zero flag to true
+ 570:	48 39 c1             	cmp    %rax,%rcx
+    ; if regA == regB, then set negative flage to true
+ 573:	74 f5                	je     56a <compute_indexSize_encoded.shiftLoop01>
+    ; if regA < regB zero flag is false
+    ; if regA <> regB then negative flag is false
+ 575:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+    ret
+ 57c:	74 2d                	je     5ab <compute_indexSize_encoded.indexSizeHalfMax>
+
+
+ 57e:	48 b8 03 00 00 00 00 	movabs $0x3,%rax
+ 585:	00 00 00 
+%endif
+ 588:	e9 28 00 00 00       	jmp    5b5 <compute_indexSize_encoded.indexFoundSize>
+
+000000000000058d <compute_indexSize_encoded.indexSize2>:
+ 58d:	48 b8 00 00 00 00 00 	movabs $0x0,%rax
+ 594:	00 00 00 
+ 597:	e9 19 00 00 00       	jmp    5b5 <compute_indexSize_encoded.indexFoundSize>
+
+000000000000059c <compute_indexSize_encoded.indexSize4>:
+ 59c:	48 b8 01 00 00 00 00 	movabs $0x1,%rax
+ 5a3:	00 00 00 
+ 5a6:	e9 0a 00 00 00       	jmp    5b5 <compute_indexSize_encoded.indexFoundSize>
+
+00000000000005ab <compute_indexSize_encoded.indexSizeHalfMax>:
+ 5ab:	48 b8 02 00 00 00 00 	movabs $0x2,%rax
+ 5b2:	00 00 00 
+
+00000000000005b5 <compute_indexSize_encoded.indexFoundSize>:
+ 5b5:	5a                   	pop    %rdx
+ 5b6:	59                   	pop    %rcx
+ 5b7:	c3                   	ret    
+
+00000000000005b8 <cmp_indices>:
+ 5b8:	c3                   	ret    
+
+00000000000005b9 <conversion_binaryTObaseTEST>:
+	call	index__set_get_test_rdx
+	pop	rdx
+	ret
+
+index__set_get_test3:
+	push	rdx
+ 5b9:	52                   	push   %rdx
+	mov	rdx,	36546848
+ 5ba:	50                   	push   %rax
+	call	index__set_get_test_rdx
+ 5bb:	48 b8 0a 00 00 00 00 	movabs $0xa,%rax
+ 5c2:	00 00 00 
+	pop	rdx
+ 5c5:	48 ba 16 3e 00 00 00 	movabs $0x3e16,%rdx
+ 5cc:	00 00 00 
+	ret
+ 5cf:	e8 74 fc ff ff       	call   248 <convertBinaryToBase_String>
+
+ 5d4:	48 8b 08             	mov    (%rax),%rcx
+index__set_get_test4:
+ 5d7:	e8 84 fa ff ff       	call   60 <print_rcx>
+	push	rdx
+ 5dc:	c3                   	ret    
+
+00000000000005dd <index__set_get_test_all>:
+	mov	rdx,	6648634333
+	call	index__set_get_test_rdx
+	pop	rdx
+ 5dd:	e8 10 00 00 00       	call   5f2 <index__set_get_test1>
+	ret
+ 5e2:	e8 1d 00 00 00       	call   604 <index__set_get_test2>
+
+ 5e7:	e8 2a 00 00 00       	call   616 <index__set_get_test3>
+index__set_get_test_rdx:
+ 5ec:	e8 37 00 00 00       	call   628 <index__set_get_test4>
+	mov	rax,	3	; print the binary of rdx
+ 5f1:	c3                   	ret    
+
+00000000000005f2 <index__set_get_test1>:
+	call	print_binary_register
+	call	set_indexValue_encoded
+	call	get_indexValue_decoded
+ 5f2:	52                   	push   %rdx
+	mov	rax,	2	; print the binary of rcx
+ 5f3:	48 ba 00 00 00 00 00 	movabs $0x0,%rdx
+ 5fa:	00 00 00 
+	call	print_binary_register
+ 5fd:	e8 38 00 00 00       	call   63a <index__set_get_test_rdx>
+	cmp	rbx,	0
+ 602:	5a                   	pop    %rdx
+	jmp	.passed
+ 603:	c3                   	ret    
+
+0000000000000604 <index__set_get_test2>:
+	mov	rcx,	msg_failed
+	call	print_rcx
+	jmp	.end_test
+ 604:	52                   	push   %rdx
+.passed:
+ 605:	48 ba 01 00 00 00 00 	movabs $0x1,%rdx
+ 60c:	00 00 00 
+	mov	rcx,	msg_passed
+ 60f:	e8 26 00 00 00       	call   63a <index__set_get_test_rdx>
+	call	print_rcx
+ 614:	5a                   	pop    %rdx
+	call	print_rcx
+ 615:	c3                   	ret    
+
+0000000000000616 <index__set_get_test3>:
+.end_test:
+	ret
+	
+ 616:	52                   	push   %rdx
+
+ 617:	48 ba 20 a9 2d 02 00 	movabs $0x22da920,%rdx
+ 61e:	00 00 00 
+%endif	
+ 621:	e8 14 00 00 00       	call   63a <index__set_get_test_rdx>
+ 626:	5a                   	pop    %rdx
+ 627:	c3                   	ret    
+
+0000000000000628 <index__set_get_test4>:
+ 628:	52                   	push   %rdx
+ 629:	48 ba dd 1b 4a 8c 01 	movabs $0x18c4a1bdd,%rdx
+ 630:	00 00 00 
+ 633:	e8 02 00 00 00       	call   63a <index__set_get_test_rdx>
+ 638:	5a                   	pop    %rdx
+ 639:	c3                   	ret    
+
+000000000000063a <index__set_get_test_rdx>:
+ 63a:	48 b8 03 00 00 00 00 	movabs $0x3,%rax
+ 641:	00 00 00 
+ 644:	e8 40 fa ff ff       	call   89 <print_binary_register>
+ 649:	e8 d1 fe ff ff       	call   51f <set_indexValue_encoded>
+ 64e:	e8 bf fe ff ff       	call   512 <get_indexValue_decoded>
+ 653:	48 b8 02 00 00 00 00 	movabs $0x2,%rax
+ 65a:	00 00 00 
+ 65d:	e8 27 fa ff ff       	call   89 <print_binary_register>
+ 662:	48 81 fb 00 00 00 00 	cmp    $0x0,%rbx
+ 669:	e9 14 00 00 00       	jmp    682 <index__set_get_test_rdx.passed>
+ 66e:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 675:	00 00 00 
+ 678:	e8 e3 f9 ff ff       	call   60 <print_rcx>
+ 67d:	e9 14 00 00 00       	jmp    696 <index__set_get_test_rdx.end_test>
+
+0000000000000682 <index__set_get_test_rdx.passed>:
+ 682:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 689:	00 00 00 
+ 68c:	e8 cf f9 ff ff       	call   60 <print_rcx>
+ 691:	e8 ca f9 ff ff       	call   60 <print_rcx>
+
+0000000000000696 <index__set_get_test_rdx.end_test>:
+ 696:	c3                   	ret    
+
+0000000000000697 <_start>:
+;start the actual program
+_start:
+; run some code here
+; test print function
+; **!** need to move these tests to the testing framework
+	mov	rcx,	msg1
+ 697:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 69e:	00 00 00 
+	call	print_rcx
+ 6a1:	e8 ba f9 ff ff       	call   60 <print_rcx>
+
+; test file function
+	mov	rcx,	filename_test
+ 6a6:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 6ad:	00 00 00 
+	call	print_rcx
+ 6b0:	e8 ab f9 ff ff       	call   60 <print_rcx>
+
+; create file
+	mov	rdi,	filename_test
+ 6b5:	48 bf 00 00 00 00 00 	movabs $0x0,%rdi
+ 6bc:	00 00 00 
+	mov	rbx,	fd_test
+ 6bf:	48 bb 00 00 00 00 00 	movabs $0x0,%rbx
+ 6c6:	00 00 00 
+	call	fileCreate
+ 6c9:	e8 32 f9 ff ff       	call   0 <fileCreate>
+
+; test file function
+	mov	rcx,	filename_test
+ 6ce:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 6d5:	00 00 00 
+	call	print_rcx
+ 6d8:	e8 83 f9 ff ff       	call   60 <print_rcx>
+
+; print message to file
+	mov	rcx, msg1
+ 6dd:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 6e4:	00 00 00 
+	call	fileWrite
+ 6e7:	e8 43 f9 ff ff       	call   2f <fileWrite>
+
+; close file
+	mov	rbx,	fd_test
+ 6ec:	48 bb 00 00 00 00 00 	movabs $0x0,%rbx
+ 6f3:	00 00 00 
+	call	fileClose
+ 6f6:	e8 55 f9 ff ff       	call   50 <fileClose>
+
+; test file function
+	mov	rcx,	filename_test
+ 6fb:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 702:	00 00 00 
+	call	print_rcx
+ 705:	e8 56 f9 ff ff       	call   60 <print_rcx>
+
+
+; testing framework for index.asm
+	mov	rcx,	LF
+ 70a:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 711:	00 00 00 
+	call	print_rcx
+ 714:	e8 47 f9 ff ff       	call   60 <print_rcx>
+	mov	rcx,	msg_testBegin
+ 719:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 720:	00 00 00 
+	call	print_rcx
+ 723:	e8 38 f9 ff ff       	call   60 <print_rcx>
+	mov	rcx,	LF
+ 728:	48 b9 00 00 00 00 00 	movabs $0x0,%rcx
+ 72f:	00 00 00 
+	call	print_rcx
+ 732:	e8 29 f9 ff ff       	call   60 <print_rcx>
+	call	index__set_get_test_all
+ 737:	e8 a1 fe ff ff       	call   5dd <index__set_get_test_all>
+
+	call	conversion_binaryTObaseTEST
+ 73c:	e8 78 fe ff ff       	call   5b9 <conversion_binaryTObaseTEST>
+
+	call	QUIT
+ 741:	e8 29 fd ff ff       	call   46f <QUIT>

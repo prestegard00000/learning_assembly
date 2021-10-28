@@ -185,7 +185,7 @@ print_binary_register:
 	push	r9	; inverted counter
 	mov	r9,	0
 	push	r8	; load string array for binary	
-	mov	r8,	bin_array_64Bit
+	mov	r8,	register_array_64BitMax
 .register64_loop: ; this loop could be for all the register sizes
 	shl	rdx,	1
 	; cmp overflow
@@ -205,7 +205,7 @@ print_binary_register:
 	mov	byte	[r8],	0Ah
 	inc	r8
 	mov	byte	[r8],	0h
-	mov	rcx,	bin_array_64Bit	;r8 is now pointing at the end of bin_array_64Bit	
+	mov	rcx,	register_array_64BitMax	;r8 is now pointing at the end of register_array_64BitMax	
 	call	print_rcx
 
 	pop	r8
@@ -244,6 +244,178 @@ slen:
    pop  rcx
 
    ret
+
+;---------------------------------------------------------------------------------
+; take the rdx and return a decimal
+print_rdx_decimal:
+
+	push	rax
+	push	rbx
+	push	rcx
+	mov	rcx,	64
+	mov	rbx,	rdx
+	mov	rax,	rdx
+.leadingZerosloop:
+	;	mul	rbx,	10	; mul bx -> ax = ax*bx with overflow into dx
+	jc	.valueLoop
+	mov	rax,	rbx
+	dec	rcx
+	jnz	.leadingZerosloop
+	mov	rcx,	register_array_64BitMax
+	mov	byte	[rcx],	'0'
+	jmp	.done
+
+.valueLoop:
+	;div	rbx,	10
+	sub	rax,	rbx
+	
+	
+	dec	rcx
+	jnz	.valueLoop
+
+
+.done:
+	inc	rcx
+	mov	byte	[rcx],	0h
+	mov	rcx,	register_array_64BitMax
+	call	print_rcx
+
+	pop	rcx
+	pop	rbx
+	pop	rax
+	ret
+
+;---------------------------------------------------------------------------------
+; convert the binary number in rdx into a string of digits with base in rax
+; return string in rax
+convertBinaryToBase_String:
+	;do a zero comparison and exit early
+	push	rbx
+	push	rcx
+	push	rdx
+	push	r8
+	push	r9
+	mov	r9,	rdx
+	mov	rbx,	rax
+	mov	r8,	register_array_64BitMax
+	mov	rdx,	0
+	mov	rcx,	0	; counter
+	;do a base two conversion and exit early
+.loop:
+	cmp	r9,	rax
+	jle	.loop2
+	inc	rcx
+	mul	rbx	; unsigned multiplication, rax = rax * rbx, with overflow into rdx
+	;	rdx should be zerod, so if it isn't then .tooBig
+	cmp	rdx,	0
+	jnz	.tooBig
+	; jc	.tooBig
+	jmp	.loop
+.tooBig:
+	nop
+	; **!** need a way to handle rax^n< rdx <rax^n+1
+.loop2:
+	push	rcx
+	mov	rcx,	msg1
+	call	print_rcx
+	pop	rcx
+	; rdx should be zero'd so move rdx to r10
+	;div	rbx	; rax now has the amount to divide by
+	push	rax
+	push	rdx
+	
+;	mov	rcx,	rax	; move it to rcx so r10 can be the numerator
+;	mov	rax,	r	
+;	div	rcx
+;	mov	rbx,	rax
+	;div	
+;	mov	r9,	rdx	
+; **!** conditional move CMOVcc	reg32/m32	; o32 of 40+cc/r
+	; convert rcx to a char
+	cmp	rax,	0
+	mov	byte	[r8],	'0'
+	je	.found
+	cmp	rax,	1
+	mov	byte	[r8],	'1'
+	je	.found
+	cmp	rax,	2
+	mov	byte	[r8],	'2'
+	je	.found
+	cmp	rax,	3
+	mov	byte	[r8],	'3'
+	je	.found
+	cmp	rax,	4
+	mov	byte	[r8],	'4'
+	je	.found
+	cmp	rax,	5
+	mov	byte	[r8],	'5'
+	je	.found
+	cmp	rax,	6
+	mov	byte	[r8],	'6'
+	je	.found
+	cmp	rax,	7
+	mov	byte	[r8],	'7'
+	je	.found
+	cmp	rax,	8
+	mov	byte	[r8],	'8'
+	je	.found
+	cmp	rax,	9
+	mov	byte	[r8],	'9'
+	je	.found
+	cmp	rax,	10
+	mov	byte	[r8],	'A'
+	je	.found
+	cmp	rax,	11
+	mov	byte	[r8],	'B'
+	je	.found
+	cmp	rax,	12
+	mov	byte	[r8],	'C'
+	je	.found
+	cmp	rax,	13
+	mov	byte	[r8],	'D'
+	je	.found
+	cmp	rax,	14
+	mov	byte	[r8],	'E'
+	je	.found
+	cmp	rax,	15
+	mov	byte	[r8],	'F'
+	je	.found
+	mov	byte	[r8],	'i'
+	jmp	.found
+
+.found:
+	pop	rdx
+	pop	rax
+
+	; add to r8
+	inc	r8
+	dec	rcx
+	cmp	rcx,	0
+	je	.done
+	;	mov	rax,	rcx
+	jmp	.loop2
+.done:
+	;	add the b{base number}
+	mov	byte	[r8],	'a'
+	inc	r8
+	mov	byte	[r8],	0Ah
+	inc	r8
+	mov	byte	[r8],	0h
+	
+	mov	rax,	register_array_64BitMax
+
+	pop	r9
+	pop	r8
+	pop	rdx
+	pop	rcx
+	pop	rbx
+
+	push	rcx
+	mov	rcx,	msg1
+	call	print_rcx
+	pop	rcx
+	
+	ret
 
 ;---------------------------------------------------------------------------------
 ; returns the number of bits in the rax register

@@ -75,7 +75,7 @@ _start:
 	call	print_rcx
 	call	index__set_get_test_all
 
-
+	call	conversion_binaryTObaseTEST
 
 	call	QUIT
 
@@ -102,4 +102,4 @@ section .data
 ; .bss contains variable variables ?
 section .bss
 variable: RESB 1 ; reserve 1 byte for the variable variable
-bin_array_64Bit: RESB	67 ;	db	"0000000000000000000000000000000000000000000000000000000000000000b",	0Ah,	0h
+register_array_64BitMax: RESB	67 ;	db	"0000000000000000000000000000000000000000000000000000000000000000b",	0Ah,	0h
