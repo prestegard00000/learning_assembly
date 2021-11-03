@@ -290,113 +290,174 @@ print_rdx_decimal:
 ; return string in rax
 convertBinaryToBase_String:
 	;do a zero comparison and exit early
-	push	rbx
-	push	rcx
-	push	rdx
-	push	r8
-	push	r9
+	push	rbx	; base
+	push	rcx	; counter (max power of the base that is > value)
+	push	rdx	; back up of the value
+	push	r8	; temporary storage of the output string memory address
+	push	r9	; temporary storage of the value
+	push	r10	; temporary storage of the base^power
+	push	r11	; amount to subtract from temp value
+	
 	mov	r9,	rdx
 	mov	rbx,	rax
 	mov	r8,	register_array_64BitMax
 	mov	rdx,	0
 	mov	rcx,	0	; counter
-	;do a base two conversion and exit early
-.loop:
-	cmp	r9,	rax
-	jle	.loop2
-	inc	rcx
+	; pop number
+	; pop register size (10 bits) [1-1024]
+	; pop base (12 bits) [1-4096]
+	; pop leading zeros (1 bit)
+	; pop append base (1 bit)
+	; add the last three together and mask
+	; return stack pointer array
+	; **!** need a way to specify displaying leading zeros and base notation
+	; do a base two conversion and exit early
+	; turn base into string (using base ten)
+	; append base to current string
+.morePower:
+	cmp	r9,	rax	; is the value (rax) less than or equal to the base to a power
+	jle	.loop2		; if it is, then start decoding
+	inc	rcx		; count the power of the base
 	mul	rbx	; unsigned multiplication, rax = rax * rbx, with overflow into rdx
+			; rbx = base, rax = base ^ rcx
 	;	rdx should be zerod, so if it isn't then .tooBig
 	cmp	rdx,	0
 	jnz	.tooBig
 	; jc	.tooBig
-	jmp	.loop
+	jmp	.morePower
 .tooBig:
 	nop
-	; **!** need a way to handle rax^n< rdx <rax^n+1
+	; **!** need a way to handle r9^n < rbx ^ rcx [base^power] <r9^n+1
+	; subtract rbx^rcx - r9^n
+	; divide by rbx^rcx
+	; send new number in recursively, with same base.
+	; remove base from the returned string, push in front of rest of string
+
 .loop2:
 	push	rcx
 	mov	rcx,	msg1
 	call	print_rcx
 	pop	rcx
 	; rdx should be zero'd so move rdx to r10
-	;div	rbx	; rax now has the amount to divide by
-	push	rax
-	push	rdx
-	
-;	mov	rcx,	rax	; move it to rcx so r10 can be the numerator
-;	mov	rax,	r	
-;	div	rcx
-;	mov	rbx,	rax
-	;div	
-;	mov	r9,	rdx	
+	div	rbx
+	mov	r10,	rax
+	mov	rax,	r9
+	div	r10
+
 ; **!** conditional move CMOVcc	reg32/m32	; o32 of 40+cc/r
 	; convert rcx to a char
 	cmp	rax,	0
-	mov	byte	[r8],	'0'
-	je	.found
+	je	.C00
 	cmp	rax,	1
-	mov	byte	[r8],	'1'
-	je	.found
+	je	.C01
 	cmp	rax,	2
-	mov	byte	[r8],	'2'
-	je	.found
+	je	.C02
 	cmp	rax,	3
-	mov	byte	[r8],	'3'
-	je	.found
+	je	.C03
 	cmp	rax,	4
-	mov	byte	[r8],	'4'
-	je	.found
+	je	.C04
 	cmp	rax,	5
-	mov	byte	[r8],	'5'
-	je	.found
+	je	.C05
 	cmp	rax,	6
-	mov	byte	[r8],	'6'
-	je	.found
+	je	.C06
 	cmp	rax,	7
-	mov	byte	[r8],	'7'
-	je	.found
+	je	.C07
 	cmp	rax,	8
-	mov	byte	[r8],	'8'
-	je	.found
+	je	.C08
 	cmp	rax,	9
-	mov	byte	[r8],	'9'
-	je	.found
+	je	.C09
 	cmp	rax,	10
-	mov	byte	[r8],	'A'
-	je	.found
+	je	.C10
 	cmp	rax,	11
-	mov	byte	[r8],	'B'
-	je	.found
+	je	.C11
 	cmp	rax,	12
-	mov	byte	[r8],	'C'
-	je	.found
+	je	.C12
 	cmp	rax,	13
-	mov	byte	[r8],	'D'
-	je	.found
+	je	.C13
 	cmp	rax,	14
-	mov	byte	[r8],	'E'
-	je	.found
+	je	.C14
 	cmp	rax,	15
+	je	.C15
+	jmp	.COTHER
+
+.C00:
+	mov	byte	[r8],	'0'
+	jmp	.found
+.C01:
+	mov	byte	[r8],	'1'
+	mov	r11,	1
+	jmp	.found
+.C02:
+	mov	byte	[r8],	'2'
+	sub	rax,	2
+	jmp	.found
+.C03:
+	mov	byte	[r8],	'3'
+	jmp	.found
+.C04:
+	mov	byte	[r8],	'4'
+	jmp	.found
+.C05:
+	mov	byte	[r8],	'5'
+	jmp	.found
+.C06:
+	mov	byte	[r8],	'6'
+	jmp	.found
+.C07:
+	mov	byte	[r8],	'7'
+	jmp	.found
+.C08:
+	mov	byte	[r8],	'8'
+	jmp	.found
+.C09:
+	mov	byte	[r8],	'9'
+	jmp	.found
+.C10:
+	mov	byte	[r8],	'A'
+	jmp	.found
+.C11:
+	mov	byte	[r8],	'B'
+	jmp	.found
+.C12:
+	mov	byte	[r8],	'C'
+	jmp	.found
+.C13:
+	mov	byte	[r8],	'D'
+	jmp	.found
+.C14:
+	mov	byte	[r8],	'E'
+	jmp	.found
+.C15:
 	mov	byte	[r8],	'F'
-	je	.found
+	jmp	.found
+.COTHER:
 	mov	byte	[r8],	'i'
 	jmp	.found
-
 .found:
-	pop	rdx
-	pop	rax
-
-	; add to r8
+;	pop	rdx
+;	pop	rax
 	inc	r8
 	dec	rcx
-	cmp	rcx,	0
+	cmp	r10,	1
 	je	.done
+
+	;mov	rax,	rdx
+	
+	mul	r10
+	sub	r9,	rax
+	;mov	r9,	rax
+	;mov	rax,	r11
+	;mul	r10
+	;sub	r9,	rax
+	mov	rax,	r10
+	
+	
+	;cmp	rcx,	0
 	;	mov	rax,	rcx
 	jmp	.loop2
 .done:
 	;	add the b{base number}
-	mov	byte	[r8],	'a'
+	mov	byte	[r8],	'b'
 	inc	r8
 	mov	byte	[r8],	0Ah
 	inc	r8
@@ -404,6 +465,8 @@ convertBinaryToBase_String:
 	
 	mov	rax,	register_array_64BitMax
 
+	pop	r11
+	pop	r10
 	pop	r9
 	pop	r8
 	pop	rdx
@@ -416,6 +479,63 @@ convertBinaryToBase_String:
 	pop	rcx
 	
 	ret
+
+;---------------------------------------------------------------------------------
+; attempting to pass 64 bits and 24 bits from stack
+; returning some number of bytes on stack
+convert_number_to_string_onStack:
+	xor	rcx,	rcx
+	mov	rcx,	qword	[rsp+16]
+	call	print_rcx
+	mov	rcx,	msg1
+	call	print_rcx
+	xor	rcx,	rcx
+	mov	qword	[rsp - 16],	msg2
+;	pop	r9	; value (64 bits)
+;	pop	r10	; metaData (24 bits)
+;	push	rbx	; save for later - now the total base^power
+;	push	rcx	; save for later - now the power count
+;	push	rdi	; save for later?
+;	push	r13	; string pointer
+	
+;	mov	rax,	r10	; extrack register size, via masking
+;	and	rax,	1111111111b	; register size
+;	mov	r11,	r10
+;	shr	r11,	10
+;	and	r11,	00111111111111b ; base amount
+;	mov	r12,	r10	; meta data
+;	shr	r12,	22	; 1- include base number in string, -1 include leading zeros
+;	push	r12
+;	shr	r12,	1
+;	cmp	r12,	1
+;	jne	.skip_base
+;	push	000000000011000000001010b
+;	push	r11
+;	call	convert_number_to_string_onStack
+;	pop	r13	;	(pointer to string Array)
+;	
+;.skip_base:
+;	pop	r12
+	; pop	r13	; pointer to string of decimal of base number (zero terminated)
+	
+	;	stick	r13 pointer onto the stack
+;	push	r13
+;	pop	r13
+;	pop	rdi
+;	pop	rcx
+;	pop	rbx
+	
+	; push	r13
+	
+	; push	
+	
+	 
+	; push	
+	ret
+	
+	
+
+
 
 ;---------------------------------------------------------------------------------
 ; returns the number of bits in the rax register

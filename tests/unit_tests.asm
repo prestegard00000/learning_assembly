@@ -46,6 +46,14 @@
 	%define tests
 ; **!** could use some push and pop to make it safer
 ; **!** could use a throw error mechanism
+convert_number_to_string_onStackTEST:
+	;push	100000000010100001000000b
+	;push	12345
+	call	convert_number_to_string_onStack
+	;pop	rdx
+	;call	print_rdx_decimal
+	ret
+
 
 conversion_binaryTObaseTEST:
 	push	rdx

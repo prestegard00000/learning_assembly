@@ -75,6 +75,17 @@ _start:
 	call	print_rcx
 	call	index__set_get_test_all
 
+	push	rax
+	xor	rax,	rax
+	mov	rax,	msg2
+	sub	rsp,	16
+	mov	qword	[rsp],	rax
+	call	convert_number_to_string_onStackTEST
+	mov	rcx,	qword	[rsp]
+	add	rsp,	16
+	call	print_rcx
+	pop	rax
+
 	call	conversion_binaryTObaseTEST
 
 	call	QUIT
@@ -95,6 +106,7 @@ section .data
 	msg_passed	db	".",	0Ah,	0h
 	msg_failed	db	"x",	0Ah,	0h
     msg1  db "Hello world!", 0Ah, 0h
+    msg2  db "Hello space!", 0Ah, 0h
     LF    db 0AH, 0h   ; 'line feed'
     zero  db 30H, 0h   ; '0'
     one   db 31H, 0h   ; '1'
