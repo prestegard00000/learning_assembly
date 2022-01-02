@@ -30,6 +30,8 @@ section .text
 
 %include 'tests/unit_tests.asm'	; **!** needs a mechanism to exclude tests
 
+%include 'functions_encode.asm' ; move values to and from stack
+
 global _start ; _start must be declared as a global for the linker
 
 ;start the actual program
@@ -84,7 +86,14 @@ _start:
 	mov	rcx,	qword	[rsp]
 	add	rsp,	16
 	call	print_rcx
+	;pop	rax
+
+; testing framework for pushing an index on and off the stack
+	push	rax
+	mov	rax,	5555
+	call	index__on_and_off_stackTEST
 	pop	rax
+	
 
 	call	conversion_binaryTObaseTEST
 
