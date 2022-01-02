@@ -84,6 +84,24 @@ get_indexSize_decoded:
 	ret
 
 ; encoded indexValue in rdx
+; return
+; rax Number of bytes needed to hold encoded index Value in rdx
+; 0 (1/2)
+; 1
+; ((system max bits) /2)/8
+; (system max bits)/8
+get_indexSize_bytes_decoded:
+	push	rdx
+	push	rbx
+	call	get_indexSize_decoded	; get the decoded size
+	mov	rax,	rbx
+	mov	rbx,	8
+	div	rbx
+	pop	rbx
+	pop	rdx
+	ret	
+
+; encoded indexValue in rdx
 ; return decoded indexValue in rbx
 decode_indexValue:
 	push rdx
