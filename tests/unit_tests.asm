@@ -44,6 +44,40 @@
 
 %ifndef tests
 	%define tests
+index__on_and_off_stackTEST:
+	; take in rax and then print the binary,
+	; push it onto the stack
+	push	rax
+	push	rbx
+	push	rcx
+	push	rdx
+	mov	rdx,	rax
+	mov	rax,	3
+	call	print_binary_register
+	mov	rax,	rdx
+	;call	push_index_parameter_onStack_create
+	;call	test_pop_push_from_stackTEST
+	;call	pop_index_parameter_offStack_clear
+	mov	rdx,	rax
+	mov	rax,	3
+	call	print_binary_register
+	pop	rdx
+	pop	rcx
+	pop	rbx
+	pop	rax
+	;call
+	; call a test function that does the following
+	; -pop the endoced index off the stack into register
+	; -print the binary
+	; -print somthing else
+	; -push it back on to the stack
+	; -ret
+	; pop it back off the stack
+	; print the binary
+	;
+
+	ret
+
 ; **!** could use some push and pop to make it safer
 ; **!** could use a throw error mechanism
 convert_number_to_string_onStackTEST:
